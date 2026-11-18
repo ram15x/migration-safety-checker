@@ -1,0 +1,545 @@
+{
+  "rows": [
+    {
+      "id": "U01_drop_check_name",
+      "family": "drop-used",
+      "label": "unsafe",
+      "verdict": "UNSAFE",
+      "failed": [
+        "old@after:mutate",
+        "new@after:mutate",
+        "forward@after:mutate",
+        "rollback@after:mutate"
+      ],
+      "causes": {
+        "old@after:mutate": "schema",
+        "new@after:mutate": "schema",
+        "forward@after:mutate": "schema",
+        "rollback@after:mutate": "schema"
+      },
+      "details": {
+        "old@after:mutate": "old test exited with code 1",
+        "new@after:mutate": "new test exited with code 1",
+        "forward@after:mutate": "old write exited with code 1",
+        "rollback@after:mutate": "new write exited with code 1"
+      },
+      "old_tests_on_final_schema_fail": true,
+      "squawk_default": true,
+      "squawk_compat": true
+    },
+    {
+      "id": "U02_drop_check_timeout",
+      "family": "drop-used",
+      "label": "unsafe",
+      "verdict": "UNSAFE",
+      "failed": [
+        "old@after:mutate",
+        "new@after:mutate",
+        "forward@after:mutate",
+        "rollback@after:mutate"
+      ],
+      "causes": {
+        "old@after:mutate": "schema",
+        "new@after:mutate": "schema",
+        "forward@after:mutate": "schema",
+        "rollback@after:mutate": "schema"
+      },
+      "details": {
+        "old@after:mutate": "old test exited with code 1",
+        "new@after:mutate": "new test exited with code 1",
+        "forward@after:mutate": "old write exited with code 1",
+        "rollback@after:mutate": "new write exited with code 1"
+      },
+      "old_tests_on_final_schema_fail": true,
+      "squawk_default": true,
+      "squawk_compat": true
+    },
+    {
+      "id": "U03_drop_check_tags",
+      "family": "drop-used",
+      "label": "unsafe",
+      "verdict": "UNSAFE",
+      "failed": [
+        "old@after:mutate",
+        "new@after:mutate",
+        "forward@after:mutate",
+        "rollback@after:mutate"
+      ],
+      "causes": {
+        "old@after:mutate": "schema",
+        "new@after:mutate": "schema",
+        "forward@after:mutate": "schema",
+        "rollback@after:mutate": "schema"
+      },
+      "details": {
+        "old@after:mutate": "old test exited with code 1",
+        "new@after:mutate": "new test exited with code 1",
+        "forward@after:mutate": "old write exited with code 1",
+        "rollback@after:mutate": "new write exited with code 1"
+      },
+      "old_tests_on_final_schema_fail": true,
+      "squawk_default": true,
+      "squawk_compat": true
+    },
+    {
+      "id": "U04_drop_ping_ua",
+      "family": "drop-used",
+      "label": "unsafe",
+      "verdict": "UNSAFE",
+      "failed": [
+        "old@after:mutate",
+        "new@after:mutate",
+        "forward@after:mutate",
+        "rollback@after:mutate"
+      ],
+      "causes": {
+        "old@after:mutate": "schema",
+        "new@after:mutate": "schema",
+        "forward@after:mutate": "schema",
+        "rollback@after:mutate": "schema"
+      },
+      "details": {
+        "old@after:mutate": "old test exited with code 1",
+        "new@after:mutate": "new test exited with code 1",
+        "forward@after:mutate": "old write exited with code 1",
+        "rollback@after:mutate": "new write exited with code 1"
+      },
+      "old_tests_on_final_schema_fail": true,
+      "squawk_default": true,
+      "squawk_compat": true
+    },
+    {
+      "id": "U05_drop_ping_scheme",
+      "family": "drop-used",
+      "label": "unsafe",
+      "verdict": "UNSAFE",
+      "failed": [
+        "old@after:mutate",
+        "new@after:mutate",
+        "forward@after:mutate",
+        "rollback@after:mutate"
+      ],
+      "causes": {
+        "old@after:mutate": "schema",
+        "new@after:mutate": "schema",
+        "forward@after:mutate": "schema",
+        "rollback@after:mutate": "schema"
+      },
+      "details": {
+        "old@after:mutate": "old test exited with code 1",
+        "new@after:mutate": "new test exited with code 1",
+        "forward@after:mutate": "old write exited with code 1",
+        "rollback@after:mutate": "new write exited with code 1"
+      },
+      "old_tests_on_final_schema_fail": true,
+      "squawk_default": true,
+      "squawk_compat": true
+    },
+    {
+      "id": "U06_rename_check_n_pings",
+      "family": "rename",
+      "label": "unsafe",
+      "verdict": "UNSAFE",
+      "failed": [
+        "old@after:mutate",
+        "new@after:mutate",
+        "forward@after:mutate",
+        "rollback@after:mutate"
+      ],
+      "causes": {
+        "old@after:mutate": "schema",
+        "new@after:mutate": "schema",
+        "forward@after:mutate": "schema",
+        "rollback@after:mutate": "schema"
+      },
+      "details": {
+        "old@after:mutate": "old test exited with code 1",
+        "new@after:mutate": "new test exited with code 1",
+        "forward@after:mutate": "old write exited with code 1",
+        "rollback@after:mutate": "new write exited with code 1"
+      },
+      "old_tests_on_final_schema_fail": true,
+      "squawk_default": true,
+      "squawk_compat": true
+    },
+    {
+      "id": "U07_rename_check_schedule",
+      "family": "rename",
+      "label": "unsafe",
+      "verdict": "UNSAFE",
+      "failed": [
+        "old@after:mutate",
+        "new@after:mutate",
+        "forward@after:mutate",
+        "rollback@after:mutate"
+      ],
+      "causes": {
+        "old@after:mutate": "schema",
+        "new@after:mutate": "schema",
+        "forward@after:mutate": "schema",
+        "rollback@after:mutate": "schema"
+      },
+      "details": {
+        "old@after:mutate": "old test exited with code 1",
+        "new@after:mutate": "new test exited with code 1",
+        "forward@after:mutate": "old write exited with code 1",
+        "rollback@after:mutate": "new write exited with code 1"
+      },
+      "old_tests_on_final_schema_fail": true,
+      "squawk_default": true,
+      "squawk_compat": true
+    },
+    {
+      "id": "U08_rename_channel_value",
+      "family": "rename",
+      "label": "unsafe",
+      "verdict": "UNSAFE",
+      "failed": [
+        "old@after:mutate",
+        "new@after:mutate",
+        "forward@after:mutate",
+        "rollback@after:mutate"
+      ],
+      "causes": {
+        "old@after:mutate": "schema",
+        "new@after:mutate": "schema",
+        "forward@after:mutate": "schema",
+        "rollback@after:mutate": "schema"
+      },
+      "details": {
+        "old@after:mutate": "old test exited with code 1",
+        "new@after:mutate": "new test exited with code 1",
+        "forward@after:mutate": "old write exited with code 1",
+        "rollback@after:mutate": "new write exited with code 1"
+      },
+      "old_tests_on_final_schema_fail": true,
+      "squawk_default": true,
+      "squawk_compat": true
+    },
+    {
+      "id": "U09_add_not_null_no_default",
+      "family": "not-null",
+      "label": "unsafe",
+      "verdict": "UNSAFE",
+      "failed": [
+        "old@after:mutate",
+        "new@after:mutate",
+        "forward@after:mutate",
+        "rollback@after:mutate"
+      ],
+      "causes": {
+        "old@after:mutate": "schema",
+        "new@after:mutate": "schema",
+        "forward@after:mutate": "schema",
+        "rollback@after:mutate": "schema"
+      },
+      "details": {
+        "old@after:mutate": "old test exited with code 1",
+        "new@after:mutate": "new test exited with code 1",
+        "forward@after:mutate": "old write exited with code 1",
+        "rollback@after:mutate": "new write exited with code 1"
+      },
+      "old_tests_on_final_schema_fail": true,
+      "squawk_default": true,
+      "squawk_compat": true
+    },
+    {
+      "id": "U10_set_not_null_ping_rid",
+      "family": "not-null",
+      "label": "unsafe",
+      "verdict": "UNSAFE",
+      "failed": [
+        "live@before:mutate",
+        "old@after:mutate",
+        "new@after:mutate",
+        "forward@after:mutate",
+        "rollback@after:mutate"
+      ],
+      "causes": {
+        "live@before:mutate": "migration",
+        "old@after:mutate": "schema",
+        "new@after:mutate": "schema",
+        "forward@after:mutate": "schema",
+        "rollback@after:mutate": "schema"
+      },
+      "details": {
+        "live@before:mutate": "phase 'mutate' failed on rows written by the old version: column \"rid\" of relation \"api_ping\" contains null values",
+        "old@after:mutate": "old test exited with code 1",
+        "new@after:mutate": "new test exited with code 1",
+        "forward@after:mutate": "old write exited with code 1",
+        "rollback@after:mutate": "new write exited with code 1"
+      },
+      "old_tests_on_final_schema_fail": true,
+      "squawk_default": true,
+      "squawk_compat": true
+    },
+    {
+      "id": "U11_check_timeout_min_1h",
+      "family": "constraint",
+      "label": "unsafe",
+      "verdict": "UNSAFE",
+      "failed": [
+        "old@after:mutate",
+        "new@after:mutate",
+        "forward@after:mutate",
+        "rollback@after:mutate"
+      ],
+      "causes": {
+        "old@after:mutate": "schema",
+        "new@after:mutate": "schema",
+        "forward@after:mutate": "schema",
+        "rollback@after:mutate": "schema"
+      },
+      "details": {
+        "old@after:mutate": "old test exited with code 1",
+        "new@after:mutate": "new test exited with code 1",
+        "forward@after:mutate": "new read after old write exited with code 1",
+        "rollback@after:mutate": "old read after new write exited with code 1"
+      },
+      "old_tests_on_final_schema_fail": true,
+      "squawk_default": true,
+      "squawk_compat": true
+    },
+    {
+      "id": "U12_shrink_check_name",
+      "family": "constraint",
+      "label": "unsafe",
+      "verdict": "UNSAFE",
+      "failed": [
+        "live@before:mutate",
+        "forward@after:mutate",
+        "rollback@after:mutate"
+      ],
+      "causes": {
+        "live@before:mutate": "migration",
+        "forward@after:mutate": "schema",
+        "rollback@after:mutate": "schema"
+      },
+      "details": {
+        "live@before:mutate": "phase 'mutate' failed on rows written by the old version: value too long for type character varying(10)",
+        "forward@after:mutate": "old write exited with code 1",
+        "rollback@after:mutate": "new write exited with code 1"
+      },
+      "old_tests_on_final_schema_fail": false,
+      "squawk_default": true,
+      "squawk_compat": true
+    },
+    {
+      "id": "U13_unique_check_project_name",
+      "family": "constraint",
+      "label": "unsafe",
+      "verdict": "UNSAFE",
+      "failed": [
+        "old@after:mutate",
+        "new@after:mutate",
+        "forward@after:mutate",
+        "rollback@after:mutate"
+      ],
+      "causes": {
+        "old@after:mutate": "schema",
+        "new@after:mutate": "schema",
+        "forward@after:mutate": "schema",
+        "rollback@after:mutate": "schema"
+      },
+      "details": {
+        "old@after:mutate": "old test exited with code 1",
+        "new@after:mutate": "new test exited with code 1",
+        "forward@after:mutate": "new read after old write exited with code 1",
+        "rollback@after:mutate": "old read after new write exited with code 1"
+      },
+      "old_tests_on_final_schema_fail": true,
+      "squawk_default": true,
+      "squawk_compat": true
+    },
+    {
+      "id": "S01_add_nullable_column",
+      "family": "add-safe",
+      "label": "safe",
+      "verdict": "SAFE",
+      "failed": [],
+      "causes": {},
+      "details": {},
+      "old_tests_on_final_schema_fail": false,
+      "squawk_default": true,
+      "squawk_compat": false
+    },
+    {
+      "id": "S02_add_not_null_with_default",
+      "family": "add-safe",
+      "label": "safe",
+      "verdict": "SAFE",
+      "failed": [],
+      "causes": {},
+      "details": {},
+      "old_tests_on_final_schema_fail": false,
+      "squawk_default": true,
+      "squawk_compat": true
+    },
+    {
+      "id": "S03_widen_check_name",
+      "family": "widen",
+      "label": "safe",
+      "verdict": "SAFE",
+      "failed": [],
+      "causes": {},
+      "details": {},
+      "old_tests_on_final_schema_fail": false,
+      "squawk_default": true,
+      "squawk_compat": true
+    },
+    {
+      "id": "S04_add_index",
+      "family": "index",
+      "label": "safe",
+      "verdict": "SAFE",
+      "failed": [],
+      "causes": {},
+      "details": {},
+      "old_tests_on_final_schema_fail": false,
+      "squawk_default": true,
+      "squawk_compat": true
+    },
+    {
+      "id": "S05_check_n_pings_nonneg",
+      "family": "constraint-safe",
+      "label": "safe",
+      "verdict": "SAFE",
+      "failed": [],
+      "causes": {},
+      "details": {},
+      "old_tests_on_final_schema_fail": false,
+      "squawk_default": true,
+      "squawk_compat": true
+    },
+    {
+      "id": "S06_add_table",
+      "family": "add-safe",
+      "label": "safe",
+      "verdict": "SAFE",
+      "failed": [],
+      "causes": {},
+      "details": {},
+      "old_tests_on_final_schema_fail": false,
+      "squawk_default": true,
+      "squawk_compat": true
+    },
+    {
+      "id": "S07_expand_only_rename",
+      "family": "add-safe",
+      "label": "safe",
+      "verdict": "SAFE",
+      "failed": [],
+      "causes": {},
+      "details": {},
+      "old_tests_on_final_schema_fail": false,
+      "squawk_default": true,
+      "squawk_compat": true
+    },
+    {
+      "id": "S08_add_nullable_ping_column",
+      "family": "add-safe",
+      "label": "safe",
+      "verdict": "SAFE",
+      "failed": [],
+      "causes": {},
+      "details": {},
+      "old_tests_on_final_schema_fail": false,
+      "squawk_default": true,
+      "squawk_compat": false
+    },
+    {
+      "id": "S09_unique_code_project",
+      "family": "constraint-safe",
+      "label": "safe",
+      "verdict": "SAFE",
+      "failed": [],
+      "causes": {},
+      "details": {},
+      "old_tests_on_final_schema_fail": false,
+      "squawk_default": true,
+      "squawk_compat": true
+    },
+    {
+      "id": "S10_generated_column",
+      "family": "add-safe",
+      "label": "safe",
+      "verdict": "SAFE",
+      "failed": [],
+      "causes": {},
+      "details": {},
+      "old_tests_on_final_schema_fail": false,
+      "squawk_default": true,
+      "squawk_compat": true
+    },
+    {
+      "id": "S11_widen_notification_error",
+      "family": "widen",
+      "label": "safe",
+      "verdict": "SAFE",
+      "failed": [],
+      "causes": {},
+      "details": {},
+      "old_tests_on_final_schema_fail": false,
+      "squawk_default": true,
+      "squawk_compat": true
+    },
+    {
+      "id": "S12_partial_index",
+      "family": "index",
+      "label": "safe",
+      "verdict": "SAFE",
+      "failed": [],
+      "causes": {},
+      "details": {},
+      "old_tests_on_final_schema_fail": false,
+      "squawk_default": true,
+      "squawk_compat": true
+    },
+    {
+      "id": "S13_sync_trigger_expand",
+      "family": "add-safe",
+      "label": "safe",
+      "verdict": "SAFE",
+      "failed": [],
+      "causes": {},
+      "details": {},
+      "old_tests_on_final_schema_fail": false,
+      "squawk_default": true,
+      "squawk_compat": false
+    }
+  ],
+  "summary": {
+    "migration-safety-checker": {
+      "tp": 13,
+      "fp": 0,
+      "fn": 0,
+      "tn": 13,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    "old-tests-on-final-schema": {
+      "tp": 12,
+      "fp": 0,
+      "fn": 1,
+      "tn": 13,
+      "precision": 1.0,
+      "recall": 0.9230769230769231
+    },
+    "squawk-default": {
+      "tp": 13,
+      "fp": 13,
+      "fn": 0,
+      "tn": 0,
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    "squawk-compat": {
+      "tp": 13,
+      "fp": 10,
+      "fn": 0,
+      "tn": 3,
+      "precision": 0.5652173913043478,
+      "recall": 1.0
+    }
+  }
+}

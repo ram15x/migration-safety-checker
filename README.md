@@ -144,6 +144,18 @@ Scope of this evidence: the scenarios are synthetic, written by the project auth
 
 Reproduce: `python eval/scenarios.py && python eval/run_eval.py`. The Squawk rows appear when Squawk is installed (`npm install squawk-cli@2.73.0`, then `SQUAWK=path/to/squawk`); without it they are omitted.
 
+## Results on mutated real migrations
+
+26 mutants of the healthchecks v3.9 schema (13 labelled unsafe, 13 safe), covering dropped and renamed columns that v3.9 uses, NOT NULL without default, tightened constraints, and additions, widenings and indexes. Each label was written from the v3.9 source and committed before the run; the tool's author wrote both the mutants and the labels.
+
+| Tool | TP | FP | FN | TN | Precision | Recall |
+|---|---|---|---|---|---|---|
+| migration-safety-checker | 13 | 0 | 0 | 13 | 1.00 | 1.00 |
+| Old app's tests on the final schema | 12 | 0 | 1 | 13 | 1.00 | 0.92 |
+| Squawk 2.73, default rules | 13 | 13 | 0 | 0 | 0.50 | 1.00 |
+
+No misses, no false positives and no harness failures (every failed check was a schema or migration error). This is not a hard test: ordinary old-app tests on the final schema catch 12 of the 13 unsafe mutants, and the one they miss (shrinking a `varchar`) is caught by the live-data check. With 13 unsafe mutants the true recall could be near 0.8, and the set covers one application. Details and the reproduce command are in `eval/mutation`.
+
 ## Architecture
 
 ```

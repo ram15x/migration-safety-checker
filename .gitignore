@@ -7,3 +7,4 @@ dist/
 .venv/
 eval/scenarios/
 eval/out/
+eval/mutation/out/
