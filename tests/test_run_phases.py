@@ -3,6 +3,7 @@
 import os
 import sys
 
+import psycopg
 import pytest
 
 from migration_safety_checker.config import ConfigError, load
@@ -110,3 +111,23 @@ apps: {old: {test: 'true'}, new: {test: 'true'}}
     (tmp_path / "s.sql").write_text("SELECT 1;")
     with pytest.raises(ConfigError):
         load(cfg)
+
+
+@pytest.mark.skipif(not os.environ.get("MIGRATION_SAFETY_CHECKER_ADMIN_URL"), reason="needs a Postgres server")
+def test_template_is_created_as_utf8_when_the_cluster_default_is_sql_ascii(monkeypatch):
+    """A SQL_ASCII cluster makes psycopg return bytes; the scratch database must not inherit that."""
+    db = Database(os.environ["MIGRATION_SAFETY_CHECKER_ADMIN_URL"])
+    monkeypatch.setattr(db, "default_encoding", lambda: "SQL_ASCII")
+    name = db.new_name("enc")
+    try:
+        db.create(name)
+        with psycopg.connect(db.url(name)) as conn:
+            assert conn.execute("SELECT pg_encoding_to_char(encoding) FROM pg_database WHERE datname = current_database()").fetchone()[0] == "UTF8"
+            assert isinstance(conn.execute("SELECT version()").fetchone()[0], str)
+    finally:
+        db.cleanup()
+
+
+@pytest.mark.skipif(not os.environ.get("MIGRATION_SAFETY_CHECKER_ADMIN_URL"), reason="needs a Postgres server")
+def test_default_encoding_is_returned_as_text():
+    assert isinstance(Database(os.environ["MIGRATION_SAFETY_CHECKER_ADMIN_URL"]).default_encoding(), str)

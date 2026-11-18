@@ -59,11 +59,27 @@ class Database:
         safe = "".join(c if c.isalnum() else "_" for c in label)[:12]
         return f"migration_safety_checker_{self._run_id}_{self._counter}_{safe}".lower()
 
+    def default_encoding(self) -> str:
+        """Encoding that a plain CREATE DATABASE gets, i.e. that of template1."""
+        with self._admin() as conn:
+            row = conn.execute(
+                "SELECT pg_encoding_to_char(encoding) FROM pg_database WHERE datname = 'template1'"
+            ).fetchone()
+        if not row:
+            return ""
+        value = row[0]
+        # on a SQL_ASCII database psycopg hands text back as bytes
+        return value.decode("ascii", "replace") if isinstance(value, bytes) else str(value)
+
     def create(self, name: str, template: str | None = None) -> None:
         if template:
             stmt = sql.SQL("CREATE DATABASE {} TEMPLATE {}").format(
                 sql.Identifier(name), sql.Identifier(template)
             )
+        elif self.default_encoding() == "SQL_ASCII":
+            # A cluster initialised as SQL_ASCII makes psycopg return text as bytes, which breaks
+            # SQLAlchemy and most application drivers. UTF8 is allowed over the C locale such a cluster uses.
+            stmt = sql.SQL("CREATE DATABASE {} TEMPLATE template0 ENCODING 'UTF8'").format(sql.Identifier(name))
         else:
             stmt = sql.SQL("CREATE DATABASE {}").format(sql.Identifier(name))
         for attempt in range(6):

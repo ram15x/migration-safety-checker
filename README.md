@@ -250,7 +250,7 @@ action.yml               composite GitHub Action: install, check, verdict gate, 
 
 ## Tech
 
-Python 3.10+, PostgreSQL (psycopg 3), Typer, Rich, PyYAML, pytest. The adapters run against the project's own Django (5.x in the healthchecks runs) or Alembic. The Alembic adapter also needs alembic in each release's environment (SQLAlchemy 1.4 or 2.x projects). CI: GitHub Actions with a Postgres 16 service.
+Python 3.10+, PostgreSQL (psycopg 3), Typer, Rich, PyYAML, pytest. The adapters run against the project's own Django (5.x in the healthchecks runs) or Alembic. The Alembic adapter also needs alembic in each release's environment. Tested range: Python 3.10 with SQLAlchemy 2.0.58 and Python 3.13 with SQLAlchemy 2.1.9, Alembic 1.20.1, psycopg 3.3, Postgres 16 (UTF8 and SQL_ASCII clusters, TCP and unix socket). SQLAlchemy 1.4 was not tested. CI: GitHub Actions with a Postgres 16 service.
 
 ## Install
 
@@ -269,12 +269,12 @@ The example commands call `python`, so run them with the virtual environment act
 ```bash
 pip install -e ".[dev]"
 export MIGRATION_SAFETY_CHECKER_ADMIN_URL=postgresql://postgres:postgres@localhost:5432/postgres
-pytest -q                      # 70 tests, most need the database
+pytest -q                      # 72 tests, most need the database
 migration-safety-checker plan examples/rename-column/unsafe.yml
 migration-safety-checker check examples/rename-column/safe.yml --out report/
 ```
 
-The user in `MIGRATION_SAFETY_CHECKER_ADMIN_URL` needs permission to create and drop databases. The generated Django commands are bash, so use Linux, macOS or WSL.
+The user in `MIGRATION_SAFETY_CHECKER_ADMIN_URL` needs permission to create and drop databases. A cluster whose default encoding is SQL_ASCII makes psycopg return text as bytes (SQLAlchemy then fails reading the server version); the tool creates its template database as UTF8 in that case. Your own application's databases are not touched by this. The generated Django commands are bash, so use Linux, macOS or WSL.
 
 ## License
 
