@@ -1,0 +1,83 @@
+# Expected results, written from reading the migrations and the application code
+# BEFORE the tool was run on any of these cases. `label` is the verdict a careful reviewer
+# would give for a rolling deploy; `reason` is the reasoning behind it. Nothing in this file
+# was edited after the first run.
+#
+# Old release: the 0.9.0 tag of fastapi/full-stack-fastapi-template. New release: the 0.10.0 tag,
+# or a copy of it whose created_at migration (revision fe56fa70289e) was rewritten (make_mutants.py).
+# Tests run in a virtualenv per release; write.py and read.py use the release's own models.
+
+real_pairs:
+  - id: R1_0.9.0_to_0.10.0
+    label: SAFE
+    reason: >
+      One revision adds a nullable created_at column to user and item. The old code neither selects nor
+      inserts it; the new model types it `datetime | None`, so rows the old code wrote (NULL) still serialise.
+    expected_checks: all pass
+
+  - id: R2_0.6.0_to_0.7.0
+    # Revisions in order: 9c0a54914c78 (varchar(255)), d98dd8ec85a3 (integer ids -> UUID),
+    # 1a31ce608336 (owner_id NOT NULL, cascade foreign key).
+    label: UNSAFE
+    reason: >
+      d98dd8ec85a3 replaces the integer primary key with a UUID that has no server-side default. The old
+      code inserts users without an id, so after that revision every old insert fails with NOT NULL, and old
+      code reading UUID ids into an int field fails validation. The migration itself preserves existing rows.
+    migrate_first_mode:     # --migrate-first: the new release is required only after the last revision
+      first_failing_state: after:d98dd8ec85a3
+      expected:
+        "live@before:9c0a54914c78": pass
+        "old@after:9c0a54914c78": pass
+        "live@before:d98dd8ec85a3": pass
+        "old@after:d98dd8ec85a3": FAIL
+        "live@before:1a31ce608336": FAIL      # the old writer cannot insert on the state after the UUID revision
+        "old@after:1a31ce608336": FAIL
+        "new@after:1a31ce608336": pass
+        "forward@after:1a31ce608336": FAIL
+        "rollback@after:1a31ce608336": FAIL
+    default_mode:           # both releases required after every revision (the adapter's default)
+      note: >
+        The new release writes UUIDs and reads UUID ids, so it cannot run on the state after the first
+        revision (the id column is still an integer). The default mode therefore also fails
+        new@after:9c0a54914c78, forward and rollback there. That is a consequence of the mode, not of
+        the migrations being unsafe in a migrate-first deploy.
+      expected:
+        "new@after:9c0a54914c78": FAIL
+        "forward@after:9c0a54914c78": FAIL
+        "rollback@after:9c0a54914c78": FAIL
+        "old@after:d98dd8ec85a3": FAIL
+        "new@after:d98dd8ec85a3": pass
+      first_failing_state: after:9c0a54914c78    # tool order puts a revision's live check before its states
+
+mutants:     # old = 0.9.0, new = 0.10.0 with the created_at migration changed as described
+  - id: M1_not_null_no_default
+    label: UNSAFE
+    reason: created_at added NOT NULL with no default. The baseline already holds rows (seeded through the old release), so the migration itself cannot apply, and the old code never sets the column.
+  - id: M2_not_null_server_default
+    label: SAFE
+    reason: "NOT NULL with server_default now(): existing rows are filled and old inserts get the default."
+  - id: M3_drop_user_full_name
+    label: UNSAFE
+    reason: Drops a column both releases select and insert.
+  - id: M4_rename_user_email
+    label: UNSAFE
+    reason: Renames a column both releases use by its old name.
+  - id: M5_add_index
+    label: SAFE
+    reason: The original migration plus an index; nothing the old code touches changes.
+  - id: M6_email_varchar_10
+    label: UNSAFE
+    reason: Shrinks user.email to 10 characters; every seeded email is longer, so the type change cannot apply.
+  - id: M7_unique_item_title
+    label: UNSAFE
+    reason: >
+      The old release allows duplicate item titles, so a unique constraint can be violated by old writes.
+      The tests and write.py use unique random titles, so this is a data-dependent hazard; the tool is
+      expected to MISS it (reported SAFE).
+    expected_tool_result: SAFE
+  - id: M8_check_title_not_blank
+    label: SAFE
+    reason: The old release already rejects empty titles through its input model (min_length=1), so no old write can violate the constraint.
+  - id: M9_add_audit_table
+    label: SAFE
+    reason: Adds an unrelated table next to the original migration.

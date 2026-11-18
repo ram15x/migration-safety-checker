@@ -1,0 +1,892 @@
+[
+  {
+    "id": "R1_0.9.0_to_0.10.0",
+    "verdict": "SAFE",
+    "exit": 0,
+    "first_failing_state": null,
+    "triage": {},
+    "checks": {
+      "old@baseline": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "new version is not deployed in this state"
+      },
+      "forward@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "old and new versions do not overlap in this state"
+      },
+      "rollback@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "rollback is not possible in this state"
+      },
+      "live@before:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "old@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "forward@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "rollback@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      }
+    }
+  },
+  {
+    "id": "R2_0.6.0_to_0.7.0_migrate_first",
+    "verdict": "UNSAFE",
+    "exit": 1,
+    "first_failing_state": "after:d98dd8ec85a3_edit_replace_id_integers_in_all_models_to_use_u",
+    "triage": {
+      "schema": 3,
+      "app-test": 1
+    },
+    "checks": {
+      "old@baseline": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "new version is not deployed in this state"
+      },
+      "forward@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "old and new versions do not overlap in this state"
+      },
+      "rollback@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "rollback is not possible in this state"
+      },
+      "live@before:9c0a54914c78_add_max_length_for_string_varchar_fields_in_use": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "old@after:9c0a54914c78_add_max_length_for_string_varchar_fields_in_use": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@after:9c0a54914c78_add_max_length_for_string_varchar_fields_in_use": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "new version is not deployed in this state"
+      },
+      "forward@after:9c0a54914c78_add_max_length_for_string_varchar_fields_in_use": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "old and new versions do not overlap in this state"
+      },
+      "rollback@after:9c0a54914c78_add_max_length_for_string_varchar_fields_in_use": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "rollback is not possible in this state"
+      },
+      "live@before:d98dd8ec85a3_edit_replace_id_integers_in_all_models_to_use_u": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "old@after:d98dd8ec85a3_edit_replace_id_integers_in_all_models_to_use_u": {
+        "status": "fail",
+        "cause": "schema",
+        "required": true,
+        "detail": "old test exited with code 1"
+      },
+      "new@after:d98dd8ec85a3_edit_replace_id_integers_in_all_models_to_use_u": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "new version is not deployed in this state"
+      },
+      "forward@after:d98dd8ec85a3_edit_replace_id_integers_in_all_models_to_use_u": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "old and new versions do not overlap in this state"
+      },
+      "rollback@after:d98dd8ec85a3_edit_replace_id_integers_in_all_models_to_use_u": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "rollback is not possible in this state"
+      },
+      "live@before:1a31ce608336_add_cascade_delete_relationships": {
+        "status": "skipped",
+        "cause": "",
+        "required": true,
+        "detail": "could not write live rows (old write exited with code 1); this phase was not tested over live data"
+      },
+      "old@after:1a31ce608336_add_cascade_delete_relationships": {
+        "status": "fail",
+        "cause": "schema",
+        "required": true,
+        "detail": "old test exited with code 1"
+      },
+      "new@after:1a31ce608336_add_cascade_delete_relationships": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "forward@after:1a31ce608336_add_cascade_delete_relationships": {
+        "status": "fail",
+        "cause": "schema",
+        "required": true,
+        "detail": "old write exited with code 1"
+      },
+      "rollback@after:1a31ce608336_add_cascade_delete_relationships": {
+        "status": "fail",
+        "cause": "app-test",
+        "required": true,
+        "detail": "old read after new write exited with code 1"
+      }
+    }
+  },
+  {
+    "id": "R2_0.6.0_to_0.7.0_default",
+    "verdict": "UNSAFE",
+    "exit": 1,
+    "first_failing_state": "after:9c0a54914c78_add_max_length_for_string_varchar_fields_in_use",
+    "triage": {
+      "schema": 6,
+      "app-test": 3
+    },
+    "checks": {
+      "old@baseline": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "new version is not deployed in this state"
+      },
+      "forward@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "old and new versions do not overlap in this state"
+      },
+      "rollback@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "rollback is not possible in this state"
+      },
+      "live@before:9c0a54914c78_add_max_length_for_string_varchar_fields_in_use": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "old@after:9c0a54914c78_add_max_length_for_string_varchar_fields_in_use": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@after:9c0a54914c78_add_max_length_for_string_varchar_fields_in_use": {
+        "status": "fail",
+        "cause": "schema",
+        "required": true,
+        "detail": "new test exited with code 1"
+      },
+      "forward@after:9c0a54914c78_add_max_length_for_string_varchar_fields_in_use": {
+        "status": "fail",
+        "cause": "app-test",
+        "required": true,
+        "detail": "new read after old write exited with code 1"
+      },
+      "rollback@after:9c0a54914c78_add_max_length_for_string_varchar_fields_in_use": {
+        "status": "fail",
+        "cause": "schema",
+        "required": true,
+        "detail": "new write exited with code 1"
+      },
+      "live@before:d98dd8ec85a3_edit_replace_id_integers_in_all_models_to_use_u": {
+        "status": "skipped",
+        "cause": "",
+        "required": true,
+        "detail": "could not write live rows (new write exited with code 1); this phase was not tested over live data"
+      },
+      "old@after:d98dd8ec85a3_edit_replace_id_integers_in_all_models_to_use_u": {
+        "status": "fail",
+        "cause": "schema",
+        "required": true,
+        "detail": "old test exited with code 1"
+      },
+      "new@after:d98dd8ec85a3_edit_replace_id_integers_in_all_models_to_use_u": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "forward@after:d98dd8ec85a3_edit_replace_id_integers_in_all_models_to_use_u": {
+        "status": "fail",
+        "cause": "schema",
+        "required": true,
+        "detail": "old write exited with code 1"
+      },
+      "rollback@after:d98dd8ec85a3_edit_replace_id_integers_in_all_models_to_use_u": {
+        "status": "fail",
+        "cause": "app-test",
+        "required": true,
+        "detail": "old read after new write exited with code 1"
+      },
+      "live@before:1a31ce608336_add_cascade_delete_relationships": {
+        "status": "skipped",
+        "cause": "",
+        "required": true,
+        "detail": "could not write live rows (old write exited with code 1); this phase was not tested over live data"
+      },
+      "old@after:1a31ce608336_add_cascade_delete_relationships": {
+        "status": "fail",
+        "cause": "schema",
+        "required": true,
+        "detail": "old test exited with code 1"
+      },
+      "new@after:1a31ce608336_add_cascade_delete_relationships": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "forward@after:1a31ce608336_add_cascade_delete_relationships": {
+        "status": "fail",
+        "cause": "schema",
+        "required": true,
+        "detail": "old write exited with code 1"
+      },
+      "rollback@after:1a31ce608336_add_cascade_delete_relationships": {
+        "status": "fail",
+        "cause": "app-test",
+        "required": true,
+        "detail": "old read after new write exited with code 1"
+      }
+    }
+  },
+  {
+    "id": "M1_not_null_no_default",
+    "verdict": "UNSAFE",
+    "exit": 1,
+    "first_failing_state": "before:fe56fa70289e_add_created_at_to_user_and_item",
+    "triage": {
+      "migration": 5
+    },
+    "checks": {
+      "old@baseline": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "new version is not deployed in this state"
+      },
+      "forward@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "old and new versions do not overlap in this state"
+      },
+      "rollback@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "rollback is not possible in this state"
+      },
+      "live@before:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "fail",
+        "cause": "migration",
+        "required": true,
+        "detail": "phase 'fe56fa70289e_add_created_at_to_user_and_item' failed on rows written by the old version: sqlalchemy.exc.IntegrityError: (psycopg.errors.NotNullViolation) column \"created_at\" of relation \"item\" "
+      },
+      "old@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "fail",
+        "cause": "migration",
+        "required": true,
+        "detail": "migration failed before the application ran: exit 1: cd /home/claude/work/apps/mutants/M1_not_null_no_default/backend && env PROJECT_NAME='Full Stack FastAPI Project' SECRET_KEY=eval-secret-key-not-fo"
+      },
+      "new@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "fail",
+        "cause": "migration",
+        "required": true,
+        "detail": "migration failed before the application ran: exit 1: cd /home/claude/work/apps/mutants/M1_not_null_no_default/backend && env PROJECT_NAME='Full Stack FastAPI Project' SECRET_KEY=eval-secret-key-not-fo"
+      },
+      "forward@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "fail",
+        "cause": "migration",
+        "required": true,
+        "detail": "migration failed before the application ran: exit 1: cd /home/claude/work/apps/mutants/M1_not_null_no_default/backend && env PROJECT_NAME='Full Stack FastAPI Project' SECRET_KEY=eval-secret-key-not-fo"
+      },
+      "rollback@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "fail",
+        "cause": "migration",
+        "required": true,
+        "detail": "migration failed before the application ran: exit 1: cd /home/claude/work/apps/mutants/M1_not_null_no_default/backend && env PROJECT_NAME='Full Stack FastAPI Project' SECRET_KEY=eval-secret-key-not-fo"
+      }
+    }
+  },
+  {
+    "id": "M2_not_null_server_default",
+    "verdict": "SAFE",
+    "exit": 0,
+    "first_failing_state": null,
+    "triage": {},
+    "checks": {
+      "old@baseline": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "new version is not deployed in this state"
+      },
+      "forward@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "old and new versions do not overlap in this state"
+      },
+      "rollback@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "rollback is not possible in this state"
+      },
+      "live@before:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "old@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "forward@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "rollback@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      }
+    }
+  },
+  {
+    "id": "M3_drop_user_full_name",
+    "verdict": "UNSAFE",
+    "exit": 1,
+    "first_failing_state": "after:fe56fa70289e_add_created_at_to_user_and_item",
+    "triage": {
+      "schema": 4
+    },
+    "checks": {
+      "old@baseline": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "new version is not deployed in this state"
+      },
+      "forward@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "old and new versions do not overlap in this state"
+      },
+      "rollback@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "rollback is not possible in this state"
+      },
+      "live@before:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "old@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "fail",
+        "cause": "schema",
+        "required": true,
+        "detail": "old test exited with code 1"
+      },
+      "new@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "fail",
+        "cause": "schema",
+        "required": true,
+        "detail": "new test exited with code 1"
+      },
+      "forward@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "fail",
+        "cause": "schema",
+        "required": true,
+        "detail": "old write exited with code 1"
+      },
+      "rollback@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "fail",
+        "cause": "schema",
+        "required": true,
+        "detail": "new write exited with code 1"
+      }
+    }
+  },
+  {
+    "id": "M4_rename_user_email",
+    "verdict": "UNSAFE",
+    "exit": 1,
+    "first_failing_state": "after:fe56fa70289e_add_created_at_to_user_and_item",
+    "triage": {
+      "schema": 4
+    },
+    "checks": {
+      "old@baseline": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "new version is not deployed in this state"
+      },
+      "forward@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "old and new versions do not overlap in this state"
+      },
+      "rollback@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "rollback is not possible in this state"
+      },
+      "live@before:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "old@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "fail",
+        "cause": "schema",
+        "required": true,
+        "detail": "old test exited with code 1"
+      },
+      "new@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "fail",
+        "cause": "schema",
+        "required": true,
+        "detail": "new test exited with code 1"
+      },
+      "forward@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "fail",
+        "cause": "schema",
+        "required": true,
+        "detail": "old write exited with code 1"
+      },
+      "rollback@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "fail",
+        "cause": "schema",
+        "required": true,
+        "detail": "new write exited with code 1"
+      }
+    }
+  },
+  {
+    "id": "M5_add_index",
+    "verdict": "SAFE",
+    "exit": 0,
+    "first_failing_state": null,
+    "triage": {},
+    "checks": {
+      "old@baseline": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "new version is not deployed in this state"
+      },
+      "forward@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "old and new versions do not overlap in this state"
+      },
+      "rollback@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "rollback is not possible in this state"
+      },
+      "live@before:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "old@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "forward@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "rollback@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      }
+    }
+  },
+  {
+    "id": "M6_email_varchar_10",
+    "verdict": "UNSAFE",
+    "exit": 1,
+    "first_failing_state": "before:fe56fa70289e_add_created_at_to_user_and_item",
+    "triage": {
+      "migration": 5
+    },
+    "checks": {
+      "old@baseline": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "new version is not deployed in this state"
+      },
+      "forward@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "old and new versions do not overlap in this state"
+      },
+      "rollback@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "rollback is not possible in this state"
+      },
+      "live@before:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "fail",
+        "cause": "migration",
+        "required": true,
+        "detail": "phase 'fe56fa70289e_add_created_at_to_user_and_item' failed on rows written by the old version: sqlalchemy.exc.DataError: (psycopg.errors.StringDataRightTruncation) value too long for type character v"
+      },
+      "old@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "fail",
+        "cause": "migration",
+        "required": true,
+        "detail": "migration failed before the application ran: exit 1: cd /home/claude/work/apps/mutants/M6_email_varchar_10/backend && env PROJECT_NAME='Full Stack FastAPI Project' SECRET_KEY=eval-secret-key-not-for-p"
+      },
+      "new@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "fail",
+        "cause": "migration",
+        "required": true,
+        "detail": "migration failed before the application ran: exit 1: cd /home/claude/work/apps/mutants/M6_email_varchar_10/backend && env PROJECT_NAME='Full Stack FastAPI Project' SECRET_KEY=eval-secret-key-not-for-p"
+      },
+      "forward@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "fail",
+        "cause": "migration",
+        "required": true,
+        "detail": "migration failed before the application ran: exit 1: cd /home/claude/work/apps/mutants/M6_email_varchar_10/backend && env PROJECT_NAME='Full Stack FastAPI Project' SECRET_KEY=eval-secret-key-not-for-p"
+      },
+      "rollback@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "fail",
+        "cause": "migration",
+        "required": true,
+        "detail": "migration failed before the application ran: exit 1: cd /home/claude/work/apps/mutants/M6_email_varchar_10/backend && env PROJECT_NAME='Full Stack FastAPI Project' SECRET_KEY=eval-secret-key-not-for-p"
+      }
+    }
+  },
+  {
+    "id": "M7_unique_item_title",
+    "verdict": "SAFE",
+    "exit": 0,
+    "first_failing_state": null,
+    "triage": {},
+    "checks": {
+      "old@baseline": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "new version is not deployed in this state"
+      },
+      "forward@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "old and new versions do not overlap in this state"
+      },
+      "rollback@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "rollback is not possible in this state"
+      },
+      "live@before:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "old@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "forward@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "rollback@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      }
+    }
+  },
+  {
+    "id": "M8_check_title_not_blank",
+    "verdict": "SAFE",
+    "exit": 0,
+    "first_failing_state": null,
+    "triage": {},
+    "checks": {
+      "old@baseline": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "new version is not deployed in this state"
+      },
+      "forward@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "old and new versions do not overlap in this state"
+      },
+      "rollback@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "rollback is not possible in this state"
+      },
+      "live@before:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "old@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "forward@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "rollback@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      }
+    }
+  },
+  {
+    "id": "M9_add_audit_table",
+    "verdict": "SAFE",
+    "exit": 0,
+    "first_failing_state": null,
+    "triage": {},
+    "checks": {
+      "old@baseline": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "new version is not deployed in this state"
+      },
+      "forward@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "old and new versions do not overlap in this state"
+      },
+      "rollback@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "rollback is not possible in this state"
+      },
+      "live@before:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "old@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "forward@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "rollback@after:fe56fa70289e_add_created_at_to_user_and_item": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      }
+    }
+  }
+]
