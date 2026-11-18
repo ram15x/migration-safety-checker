@@ -1,0 +1,26 @@
+name: healthchecks v3.4 -> v3.5
+timeout: 300
+baseline:
+  run:
+    - ./app.sh v3.4 python manage.py migrate -v0
+    - ./app.sh v3.4 script seed.py
+phases:
+  - name: move-body
+    run:
+      - ./app.sh v3.5 python manage.py migrate api 0108 -v0
+    partial_sql: [half_move.sql]
+  - name: drop-body
+    run:
+      - ./app.sh v3.5 python manage.py migrate -v0
+apps:
+  old:
+    test: ./app.sh v3.4 python manage.py test hc.api.tests.test_ping hc.api.tests.test_get_ping_body hc.api.tests.test_get_pings hc.api.tests.test_check_model --noinput
+    write: ./app.sh v3.4 script write_ping.py
+    read: ./app.sh v3.4 script read_pings.py
+  new:
+    test: ./app.sh v3.5 python manage.py test hc.api.tests.test_ping hc.api.tests.test_get_ping_body hc.api.tests.test_get_pings hc.api.tests.test_check_model --noinput
+    write: ./app.sh v3.5 script write_ping.py
+    read: ./app.sh v3.5 script read_pings.py
+invariants:
+  - name: every ping has a body in exactly one place or none
+    sql: "SELECT id FROM api_ping WHERE to_jsonb(api_ping) ->> 'body' IS NOT NULL AND body_raw IS NOT NULL"

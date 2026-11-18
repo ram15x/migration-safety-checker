@@ -1,0 +1,19 @@
+# Control: a migration that only adds a nullable column. Expected verdict: SAFE.
+name: healthchecks v3.2 -> v3.3 (control)
+timeout: 300
+baseline:
+  run:
+    - ./app.sh v3.2 python manage.py migrate -v0
+    - ./app.sh v3.2 script seed_checks.py
+phases:
+  - name: add-badge-key
+    run: [./app.sh v3.3 python manage.py migrate api 0103 -v0]
+apps:
+  old:
+    test: ./app.sh v3.2 python manage.py test hc.api.tests.test_check_model hc.api.tests.test_create_check hc.api.tests.test_get_check hc.api.tests.test_list_checks --noinput
+    write: ./app.sh v3.2 script write_check.py
+    read: ./app.sh v3.2 script read_checks.py
+  new:
+    test: ./app.sh v3.3 python manage.py test hc.api.tests.test_check_model hc.api.tests.test_create_check hc.api.tests.test_get_check hc.api.tests.test_list_checks --noinput
+    write: ./app.sh v3.3 script write_check.py
+    read: ./app.sh v3.3 script read_checks.py

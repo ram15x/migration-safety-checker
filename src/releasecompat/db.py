@@ -11,7 +11,9 @@ from pathlib import Path
 
 import psycopg
 from psycopg import sql
-from psycopg.conninfo import make_conninfo
+from urllib.parse import quote
+
+from psycopg.conninfo import conninfo_to_dict, make_conninfo
 
 
 class Database:
@@ -23,7 +25,24 @@ class Database:
 
     # -- connections -----------------------------------------------------
     def url(self, dbname: str) -> str:
-        return make_conninfo(self.admin_url, dbname=dbname)
+        """A ``postgresql://`` URL for ``dbname``, the form application tooling expects."""
+        parts = conninfo_to_dict(make_conninfo(self.admin_url, dbname=dbname))
+        auth = quote(str(parts.get("user", "")), safe="")
+        if parts.get("password"):
+            auth += ":" + quote(str(parts["password"]), safe="")
+        host = str(parts.get("host", "localhost"))
+        query: list[str] = []
+        if host.startswith("/"):  # unix socket directory
+            query.append("host=" + quote(host, safe="/"))
+            host = ""
+        elif ":" in host:
+            host = f"[{host}]"
+        port = f":{parts['port']}" if parts.get("port") else ""
+        if parts.get("sslmode"):
+            query.append("sslmode=" + quote(str(parts["sslmode"]), safe=""))
+        qs = "?" + "&".join(query) if query else ""
+        at = "@" if auth else ""
+        return f"postgresql://{auth}{at}{host}{port}/{quote(dbname, safe='')}{qs}"
 
     def _admin(self) -> psycopg.Connection:
         return psycopg.connect(self.admin_url, autocommit=True)

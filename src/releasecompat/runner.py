@@ -75,6 +75,28 @@ def _shell(cfg: Config, command: str, env_url: str, check: Check, app: str) -> t
     return proc.returncode, _trim(proc.stdout + ("\n" + proc.stderr if proc.stderr else ""))
 
 
+def _apply(
+    cfg: Config, db: Database, dbname: str, sql_files: list[str], commands: list[str]
+) -> None:
+    """Apply SQL files, then shell commands, to one database."""
+    db.apply_files(dbname, cfg.root, sql_files)
+    env = dict(os.environ)
+    env["DATABASE_URL"] = db.url(dbname)
+    env["RC_APP"] = "migrate"
+    for command in commands:
+        try:
+            proc = subprocess.run(
+                command, shell=True, cwd=cfg.root, env=env,
+                capture_output=True, text=True, timeout=cfg.timeout,
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise RuntimeError(f"timed out after {cfg.timeout}s: {command}") from exc
+        if proc.returncode != 0:
+            raise RuntimeError(
+                f"exit {proc.returncode}: {command}\n{_trim(proc.stdout + proc.stderr)}"
+            )
+
+
 def _execute(cfg: Config, db: Database, template: str, check: Check) -> CheckResult:
     name = db.new_name(check.id)
     started = time.monotonic()
@@ -82,10 +104,11 @@ def _execute(cfg: Config, db: Database, template: str, check: Check) -> CheckRes
     try:
         try:
             for phase in check.state.applied:
-                db.apply_files(name, cfg.root, phase.sql)
+                _apply(cfg, db, name, phase.sql, phase.run)
             if check.state.partial is not None:
-                db.apply_files(name, cfg.root, check.state.partial.partial_sql)
-        except psycopg.Error as exc:
+                part = check.state.partial
+                _apply(cfg, db, name, part.partial_sql, part.partial_run)
+        except (psycopg.Error, RuntimeError) as exc:
             return CheckResult(
                 check, FAIL, f"migration failed before the application ran: {exc}",
                 duration=time.monotonic() - started,
@@ -100,12 +123,12 @@ def _execute(cfg: Config, db: Database, template: str, check: Check) -> CheckRes
         elif check.kind == FORWARD:
             steps = [
                 ("old write", cfg.old.write or "", OLD),
-                ("new test after old write", cfg.new.test or "", NEW),
+                ("new read after old write", cfg.new.read or cfg.new.test or "", NEW),
             ]
         elif check.kind == ROLLBACK:
             steps = [
                 ("new write", cfg.new.write or "", NEW),
-                ("old test after new write", cfg.old.test or "", OLD),
+                ("old read after new write", cfg.old.read or cfg.old.test or "", OLD),
             ]
 
         logs: list[str] = []
@@ -120,7 +143,14 @@ def _execute(cfg: Config, db: Database, template: str, check: Check) -> CheckRes
                 )
 
         for inv in cfg.invariants:
-            rows = db.violations(name, inv.sql)
+            try:
+                rows = db.violations(name, inv.sql)
+            except psycopg.Error as exc:
+                return CheckResult(
+                    check, FAIL,
+                    f"invariant '{inv.name}' could not run: {str(exc).splitlines()[0]}",
+                    log="\n\n".join(logs), duration=time.monotonic() - started,
+                )
             if rows:
                 sample = ", ".join(str(r) for r in rows[:3])
                 return CheckResult(
@@ -146,8 +176,8 @@ def run(
     try:
         db.create(template)
         try:
-            db.apply_files(template, cfg.root, cfg.baseline_sql)
-        except psycopg.Error as exc:
+            _apply(cfg, db, template, cfg.baseline_sql, cfg.baseline_run)
+        except (psycopg.Error, RuntimeError) as exc:
             raise RuntimeError(f"baseline SQL failed: {exc}") from exc
 
         for check in build_checks(cfg):

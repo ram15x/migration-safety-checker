@@ -22,10 +22,14 @@ class AppCommands:
     ``test`` must exit 0 when the application works against the current database.
     ``write`` makes the application write data through its own code path. It is
     used by the rollback check: the new version writes, then the old version reads.
+    ``read`` verifies the application can read the data already in the database.
+    The forward and rollback checks run it after the other version's write; when it
+    is absent they fall back to ``test``, which suits suites that tolerate existing rows.
     """
 
     test: str | None = None
     write: str | None = None
+    read: str | None = None
 
 
 @dataclass
@@ -35,6 +39,8 @@ class Phase:
     name: str
     sql: list[str]
     partial_sql: list[str] = field(default_factory=list)
+    run: list[str] = field(default_factory=list)
+    partial_run: list[str] = field(default_factory=list)
     old_may_run: bool = True
     new_may_run: bool = True
 
@@ -53,6 +59,7 @@ class Config:
     root: Path
     admin_url: str
     baseline_sql: list[str]
+    baseline_run: list[str]
     phases: list[Phase]
     old: AppCommands
     new: AppCommands
@@ -94,7 +101,7 @@ def _commands(raw: Any, where: str) -> AppCommands:
         raise ConfigError(f"{where} must be a mapping with 'test' and optionally 'write'")
     if not raw.get("test"):
         raise ConfigError(f"{where}.test is required")
-    return AppCommands(test=str(raw["test"]), write=raw.get("write"))
+    return AppCommands(test=str(raw["test"]), write=raw.get("write"), read=raw.get("read"))
 
 
 def load(path: str | os.PathLike[str]) -> Config:
@@ -114,8 +121,11 @@ def load(path: str | os.PathLike[str]) -> Config:
     admin_url = _expand(str(database.get("admin_url", "${RC_ADMIN_URL}")))
 
     baseline = _as_list((raw.get("baseline") or {}).get("sql"), "baseline.sql")
-    if not baseline:
-        raise ConfigError("baseline.sql is required: the schema and data of the old release")
+    baseline_run = _as_list((raw.get("baseline") or {}).get("run"), "baseline.run")
+    if not baseline and not baseline_run:
+        raise ConfigError(
+            "baseline.sql or baseline.run is required: the schema and data of the old release"
+        )
 
     phases_raw = raw.get("phases")
     if not isinstance(phases_raw, list) or not phases_raw:
@@ -130,13 +140,16 @@ def load(path: str | os.PathLike[str]) -> Config:
             raise ConfigError(f"duplicate phase name: {name}")
         seen.add(name)
         sql = _as_list(item.get("sql"), f"phases[{i}].sql")
-        if not sql:
-            raise ConfigError(f"phases[{i}].sql is required")
+        run = _as_list(item.get("run"), f"phases[{i}].run")
+        if not sql and not run:
+            raise ConfigError(f"phases[{i}] needs sql or run")
         phases.append(
             Phase(
                 name=name,
                 sql=sql,
                 partial_sql=_as_list(item.get("partial_sql"), f"phases[{i}].partial_sql"),
+                run=run,
+                partial_run=_as_list(item.get("partial_run"), f"phases[{i}].partial_run"),
                 old_may_run=bool(item.get("old_may_run", True)),
                 new_may_run=bool(item.get("new_may_run", True)),
             )
@@ -157,6 +170,7 @@ def load(path: str | os.PathLike[str]) -> Config:
         root=root,
         admin_url=admin_url,
         baseline_sql=baseline,
+        baseline_run=baseline_run,
         phases=phases,
         old=old,
         new=new,

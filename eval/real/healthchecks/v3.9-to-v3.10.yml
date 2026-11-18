@@ -1,0 +1,23 @@
+name: healthchecks v3.9 -> v3.10
+timeout: 300
+baseline:
+  run:
+    - ./app.sh v3.9 python manage.py migrate -v0
+    - ./app.sh v3.9 script seed_checks.py
+phases:
+  - name: default
+    run: [./app.sh v3.10 python manage.py migrate api 0116 -v0]
+  - name: backfill
+    run: [./app.sh v3.10 python manage.py migrate api 0117 -v0]
+    partial_sql: [half_fill.sql]
+  - name: not-null
+    run: [./app.sh v3.10 python manage.py migrate api 0118 -v0]
+apps:
+  old:
+    test: ./app.sh v3.9 python manage.py test hc.api.tests.test_check_model hc.api.tests.test_check_badge hc.api.tests.test_get_badges hc.api.tests.test_create_check hc.api.tests.test_get_check --noinput
+    write: ./app.sh v3.9 script write_check.py
+    read: ./app.sh v3.9 script read_checks.py
+  new:
+    test: ./app.sh v3.10 python manage.py test hc.api.tests.test_check_model hc.api.tests.test_check_badge hc.api.tests.test_get_badges hc.api.tests.test_create_check hc.api.tests.test_get_check --noinput
+    write: ./app.sh v3.10 script write_check.py
+    read: ./app.sh v3.10 script read_checks.py

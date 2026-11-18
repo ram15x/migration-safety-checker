@@ -44,7 +44,7 @@ def build_states(cfg: Config) -> list[State]:
         )
     ]
     for i, phase in enumerate(cfg.phases):
-        if phase.partial_sql:
+        if phase.partial_sql or phase.partial_run:
             states.append(
                 State(
                     name=f"partial:{phase.name}",
