@@ -1,14 +1,14 @@
-# ReleaseCompat
+# Migration Safety Checker
 
-[![ci](https://github.com/ram15x/ReleaseCompat/actions/workflows/ci.yml/badge.svg)](https://github.com/ram15x/ReleaseCompat/actions/workflows/ci.yml)
+[![ci](https://github.com/ram15x/migration-safety-checker/actions/workflows/ci.yml/badge.svg)](https://github.com/ram15x/migration-safety-checker/actions/workflows/ci.yml)
 
 Rolling deploys run two versions of your application against one database at the same time. Migration tools check that the migration applies, and your test suite checks that the new code works on the final schema. The question that breaks production is different: **does every version that is allowed to run keep working in every intermediate state of the rollout, and can you roll back?**
 
-Teams often answer part of it by hand, running the previous release's tests against the new schema in CI. ReleaseCompat automates that across every state of the rollout, in both directions.
+Teams often answer part of it by hand, running the previous release's tests against the new schema in CI. Migration Safety Checker automates that across every state of the rollout, in both directions.
 
 ## How it works
 
-You describe the rollout as ordered phases (expand, backfill, contract, ...) and say which application versions may run after each one. ReleaseCompat builds a database for every state, runs your real test commands against it, and reports a verdict.
+You describe the rollout as ordered phases (expand, backfill, contract, ...) and say which application versions may run after each one. Migration Safety Checker builds a database for every state, runs your real test commands against it, and reports a verdict.
 
 For each state (baseline, mid-backfill, after each phase) it runs up to four checks:
 
@@ -22,7 +22,7 @@ For each state (baseline, mid-backfill, after each phase) it runs up to four che
 Your own SQL invariants run after every check. Each check gets a fresh clone of a template database, so checks are isolated and repeatable.
 
 ```
-$ releasecompat check releasecompat.yml
+$ msc check msc.yml
 pass  old@baseline
 FAIL  old@after:rename       old test exited with code 1
 pass  new@after:rename
@@ -66,19 +66,19 @@ invariants:
     sql: "SELECT email FROM users GROUP BY email HAVING count(*) > 1"
 ```
 
-Commands receive `DATABASE_URL` (a `postgresql://` URL), `RC_STATE` and `RC_APP`. A phase or the baseline can use `run:` (shell commands, for migrations written in Python) instead of or after `sql:`. An app can add `read:` to say how it reads existing data; the forward and rollback checks use it, and fall back to `test`. See `examples/rename-column` for a complete safe and unsafe pair.
+Commands receive `DATABASE_URL` (a `postgresql://` URL), `MSC_STATE` and `MSC_APP`. A phase or the baseline can use `run:` (shell commands, for migrations written in Python) instead of or after `sql:`. An app can add `read:` to say how it reads existing data; the forward and rollback checks use it, and fall back to `test`. See `examples/rename-column` for a complete safe and unsafe pair.
 
 ## Generate the config from Django migrations
 
 Point it at two checkouts, the release serving traffic and the one being rolled out:
 
 ```bash
-releasecompat init-django \
+msc init-django \
   --old ../app-v1 --old-python ../app-v1/.venv/bin/python \
   --new ../app-v2 --new-python ../app-v2/.venv/bin/python \
   --settings mysite.settings --tests "orders.tests billing.tests" \
-  --seed seed.py --write write.py --read read.py --out releasecompat/
-releasecompat check releasecompat/rc.yml --jobs 4
+  --seed seed.py --write write.py --read read.py --out msc/
+msc check msc/msc.yml --jobs 4
 ```
 
 Each release's own Django reports its migration graph. Every migration only the new release has becomes a phase, with a comment on risky operations (column drops, renames, constraint changes, data migrations). A generated settings overlay points the project at the prepared database, and the suites run on an empty clone of that schema without running migrations. Half-finished backfill states are added by hand with `partial_sql`.
@@ -105,7 +105,7 @@ Scope: three release pairs of one application, with a chosen subset of its tests
 
 | Tool | TP | FP | FN | TN | Precision | Recall |
 |---|---|---|---|---|---|---|
-| ReleaseCompat | 10 | 0 | 0 | 10 | 1.00 | 1.00 |
+| msc | 10 | 0 | 0 | 10 | 1.00 | 1.00 |
 | New app's tests on final schema (ordinary CI) | 0 | 0 | 10 | 10 | n/a | 0.00 |
 | Old app's tests on final schema | 7 | 0 | 3 | 10 | 1.00 | 0.70 |
 | Squawk 2.73, default rules | 10 | 10 | 0 | 0 | 0.50 | 1.00 |
@@ -142,13 +142,13 @@ Python 3.10+, PostgreSQL (psycopg 3), Typer, Rich, PyYAML, pytest. The Django ad
 
 ```bash
 pip install -e ".[dev]"
-export RC_ADMIN_URL=postgresql://postgres:postgres@localhost:5432/postgres
+export MSC_ADMIN_URL=postgresql://postgres:postgres@localhost:5432/postgres
 pytest -q                      # 33 tests, most need the database
-releasecompat plan examples/rename-column/unsafe.yml
-releasecompat check examples/rename-column/safe.yml --out report/
+msc plan examples/rename-column/unsafe.yml
+msc check examples/rename-column/safe.yml --out report/
 ```
 
-The user in `RC_ADMIN_URL` needs permission to create and drop databases. The generated Django commands are bash, so use Linux, macOS or WSL.
+The user in `MSC_ADMIN_URL` needs permission to create and drop databases. The generated Django commands are bash, so use Linux, macOS or WSL.
 
 ## License
 

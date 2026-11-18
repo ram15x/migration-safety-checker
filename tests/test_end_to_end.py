@@ -1,18 +1,18 @@
-"""End-to-end tests. They need a reachable Postgres server in RC_ADMIN_URL."""
+"""End-to-end tests. They need a reachable Postgres server in MSC_ADMIN_URL."""
 
 import os
 from pathlib import Path
 
 import pytest
 
-from releasecompat.config import load
-from releasecompat.report import to_json, to_junit, to_markdown
-from releasecompat.runner import run
+from migration_safety_checker.config import load
+from migration_safety_checker.report import to_json, to_junit, to_markdown
+from migration_safety_checker.runner import run
 
 EXAMPLES = Path(__file__).resolve().parent.parent / "examples" / "rename-column"
 
 pytestmark = pytest.mark.skipif(
-    not os.environ.get("RC_ADMIN_URL"), reason="RC_ADMIN_URL is not set"
+    not os.environ.get("MSC_ADMIN_URL"), reason="MSC_ADMIN_URL is not set"
 )
 
 
@@ -43,8 +43,8 @@ def test_scratch_databases_are_cleaned_up():
     import psycopg
 
     run(load(EXAMPLES / "safe.yml"))
-    with psycopg.connect(os.environ["RC_ADMIN_URL"], autocommit=True) as conn:
+    with psycopg.connect(os.environ["MSC_ADMIN_URL"], autocommit=True) as conn:
         leftovers = conn.execute(
-            "SELECT datname FROM pg_database WHERE datname LIKE 'rc\\_%'"
+            "SELECT datname FROM pg_database WHERE datname LIKE 'msc\\_%'"
         ).fetchall()
     assert leftovers == []

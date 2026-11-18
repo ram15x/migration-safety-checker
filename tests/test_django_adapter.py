@@ -5,9 +5,9 @@ from pathlib import Path
 
 import pytest
 
-from releasecompat.adapters import django as adapter
-from releasecompat.adapters.django import AdapterError, Migration, Options, Release
-from releasecompat.config import load
+from migration_safety_checker.adapters import django as adapter
+from migration_safety_checker.adapters.django import AdapterError, Migration, Options, Release
+from migration_safety_checker.config import load
 
 
 def _opts(tmp_path: Path, **kw) -> Options:
@@ -54,7 +54,7 @@ def test_generate_writes_a_loadable_config(tmp_path, monkeypatch):
     text = path.read_text()
     assert "RemoveField: removes a column" in text
     assert "add partial_sql" in text
-    overlay = (tmp_path / "out" / "rc_settings.py").read_text()
+    overlay = (tmp_path / "out" / "msc_settings.py").read_text()
     assert "from proj.settings import *" in overlay and "database_from_env" in overlay
 
 

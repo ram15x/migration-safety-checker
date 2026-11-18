@@ -1,14 +1,14 @@
 """Helpers for running a Django project's own tests against a prepared database.
 
 Django's test runner builds its own database by running the project's
-migrations, which hides exactly the states ReleaseCompat constructs. These
+migrations, which hides exactly the states Migration Safety Checker constructs. These
 helpers point the runner at the database named in ``DATABASE_URL`` and skip
 database creation. Use them from a small settings module:
 
     from myproject.settings import *
-    from releasecompat.django_support import database_from_env
+    from migration_safety_checker.django_support import database_from_env
     DATABASES = {"default": database_from_env()}
-    TEST_RUNNER = "releasecompat.django_support.SchemaCloneRunner"
+    TEST_RUNNER = "migration_safety_checker.django_support.SchemaCloneRunner"
 
 The module needs only Django and the standard library, so it can be put on
 ``PYTHONPATH`` of any application virtualenv.
@@ -56,7 +56,7 @@ class SchemaCloneMixin:
     the runner clones it, empties the clone's application tables, runs the
     tests there and drops the clone. Django bookkeeping tables and permissions
     are kept. The migrations are not run: the tests see exactly the schema
-    ReleaseCompat built for this state.
+    Migration Safety Checker built for this state.
 
     Projects with their own ``DiscoverRunner`` subclass combine the two:
     ``class Runner(SchemaCloneMixin, TheirRunner): pass``.

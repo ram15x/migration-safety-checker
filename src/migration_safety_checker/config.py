@@ -118,7 +118,7 @@ def load(path: str | os.PathLike[str]) -> Config:
     root = file.resolve().parent
 
     database = raw.get("database") or {}
-    admin_url = _expand(str(database.get("admin_url", "${RC_ADMIN_URL}")))
+    admin_url = _expand(str(database.get("admin_url", "${MSC_ADMIN_URL}")))
 
     baseline = _as_list((raw.get("baseline") or {}).get("sql"), "baseline.sql")
     baseline_run = _as_list((raw.get("baseline") or {}).get("run"), "baseline.run")

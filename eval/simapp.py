@@ -47,7 +47,7 @@ def main() -> int:
                     assert not bad, f"rows with empty values: {bad[:3]}"
                 if "scalar" in step:
                     assert rows[0][0] == step["scalar"], f"expected {step['scalar']}, got {rows[0][0]}"
-    print(f"{os.environ.get('RC_APP', '?')} ok")
+    print(f"{os.environ.get('MSC_APP', '?')} ok")
     return 0
 
 

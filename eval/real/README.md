@@ -12,7 +12,7 @@ Each config takes roughly 15 to 50 seconds on a 2-core cloud machine; `--jobs 4`
 
 ## Generated configs
 
-The three hand-written configs above were the first pass. `releasecompat init-django` now builds the same thing from two checkouts: it asks each release's own Django for its migration graph, turns every migration only the new release has into a phase, and writes a settings overlay so the suites run against the prepared database. `generate.sh` runs it for all three pairs.
+The three hand-written configs above were the first pass. `msc init-django` now builds the same thing from two checkouts: it asks each release's own Django for its migration graph, turns every migration only the new release has into a phase, and writes a settings overlay so the suites run against the prepared database. `generate.sh` runs it for all three pairs.
 
 Run from generated configs, the control is SAFE and v3.9 to v3.10 is UNSAFE with the same failures (4 of 13 required checks; the hand-written config had two extra checks for a half-finished backfill, which the adapter leaves for you to add as `partial_sql`). The generated v3.4 to v3.5 config is UNSAFE with 9 of 17 failed, because it found two more migrations in that release than I had listed by hand, 0110 and 0111. All 9 failures trace to the dropped `body` column from 0109 and repeat in the later states, so 0110 and 0111 add no new cause. The matrix does not say whether they would be safe on their own.
 
@@ -29,17 +29,17 @@ Across the runs, no check passed that I believe should have failed, and the cont
 
 ## What it did not catch
 
-- **A contract migration meeting rows the old version still writes.** In v3.9 to v3.10, 0118 would fail to apply in production if v3.9 created a NULL `badge_key` row between the backfill and the constraint. ReleaseCompat only reports the symptom (`forward@after:backfill` fails). It never applies a phase on top of data written by the other version. That is a gap in the matrix.
+- **A contract migration meeting rows the old version still writes.** In v3.9 to v3.10, 0118 would fail to apply in production if v3.9 created a NULL `badge_key` row between the backfill and the constraint. Migration Safety Checker only reports the symptom (`forward@after:backfill` fails). It never applies a phase on top of data written by the other version. That is a gap in the matrix.
 - **Locks and duration.** Nothing here measures how long a migration holds a lock on a large table. A linter such as Squawk covers that.
 - **Unselected tests.** Each side ran a chosen subset of the application's tests (ping, badge and check modules), not the whole suite. A break outside those modules is invisible.
 
-## Problems in ReleaseCompat that the real application exposed
+## Problems in Migration Safety Checker that the real application exposed
 
 All fixed in this commit.
 
 1. `DATABASE_URL` was a libpq `key=value` string, not a URL, so URL-based tooling could not parse it. It is now a `postgresql://` URL, including the socket-directory form.
 2. Phases and the baseline could only be SQL files, which cannot express data migrations written in Python. They can now also run shell commands (`run`, plus `partial_sql` for half-done states).
-3. Test suites that assume empty tables failed on a seeded baseline. Apps can now define a `read` command for the forward and rollback checks, and `releasecompat.django_support` runs a Django suite on an empty clone of the prepared schema without running migrations.
+3. Test suites that assume empty tables failed on a seeded baseline. Apps can now define a `read` command for the forward and rollback checks, and `migration_safety_checker.django_support` runs a Django suite on an empty clone of the prepared schema without running migrations.
 4. An invariant whose SQL could not run (for example, it named a column the phase had dropped) crashed the tool with a traceback. It is now a failed check with the database error.
 
 Still open: a check that fails because of a harness problem looks the same as one that fails because of the migration. The first control run was a false UNSAFE caused by a write script that assumed an API field absent in older releases.
@@ -47,7 +47,7 @@ Still open: a check that fails because of a harness problem looks the same as on
 ## Reproduce
 
 ```bash
-export RC_ADMIN_URL=postgresql://postgres@localhost:5432/postgres
+export MSC_ADMIN_URL=postgresql://postgres@localhost:5432/postgres
 eval/real/healthchecks/setup.sh            # checkouts and virtualenvs in $HC_APPS (default /tmp/apps)
-releasecompat check eval/real/healthchecks/v3.4-to-v3.5.yml --out report/
+msc check eval/real/healthchecks/v3.4-to-v3.5.yml --out report/
 ```

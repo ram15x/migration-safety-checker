@@ -21,7 +21,7 @@ def _grid(report: Report) -> dict[str, dict[str, CheckResult]]:
 def to_markdown(report: Report) -> str:
     required = report.required
     lines = [
-        f"# ReleaseCompat report: {report.name}",
+        f"# Migration Safety Checker report: {report.name}",
         "",
         f"**Verdict: {report.verdict}** "
         f"({len(report.failed)} of {len(required)} required checks failed)",
@@ -86,7 +86,7 @@ def to_json(report: Report) -> str:
 def to_junit(report: Report) -> str:
     suite = ET.Element(
         "testsuite",
-        name=f"releasecompat:{report.name}",
+        name=f"msc:{report.name}",
         tests=str(len(report.results)),
         failures=str(len(report.failed)),
         skipped=str(sum(1 for r in report.results if r.status == SKIPPED)),

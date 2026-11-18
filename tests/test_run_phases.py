@@ -5,20 +5,20 @@ import sys
 
 import pytest
 
-from releasecompat.config import ConfigError, load
-from releasecompat.db import Database
-from releasecompat.runner import run
+from migration_safety_checker.config import ConfigError, load
+from migration_safety_checker.db import Database
+from migration_safety_checker.runner import run
 
 pytestmark = pytest.mark.skipif(
-    not os.environ.get("RC_ADMIN_URL"), reason="RC_ADMIN_URL is not set"
+    not os.environ.get("MSC_ADMIN_URL"), reason="MSC_ADMIN_URL is not set"
 )
 
 PY = sys.executable
 
 
 def _write(tmp_path, body: str):
-    (tmp_path / "rc.yml").write_text(body)
-    return tmp_path / "rc.yml"
+    (tmp_path / "msc.yml").write_text(body)
+    return tmp_path / "msc.yml"
 
 
 def _sql_cmd(tmp_path, name: str, sql: str) -> str:
@@ -33,13 +33,13 @@ def _sql_cmd(tmp_path, name: str, sql: str) -> str:
 
 
 def test_database_url_is_a_postgresql_url():
-    url = Database("host=h port=5433 user=u password=p@w").url("rc_x")
-    assert url == "postgresql://u:p%40w@h:5433/rc_x"
+    url = Database("host=h port=5433 user=u password=p@w").url("msc_x")
+    assert url == "postgresql://u:p%40w@h:5433/msc_x"
 
 
 def test_database_url_supports_socket_directories():
-    url = Database("host=/var/run/postgresql user=postgres").url("rc_x")
-    assert url == "postgresql://postgres@/rc_x?host=/var/run/postgresql"
+    url = Database("host=/var/run/postgresql user=postgres").url("msc_x")
+    assert url == "postgresql://postgres@/msc_x?host=/var/run/postgresql"
 
 
 def test_run_phases_build_the_state_and_read_overrides_test(tmp_path):

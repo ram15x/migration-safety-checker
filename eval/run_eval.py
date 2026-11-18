@@ -1,7 +1,7 @@
-"""Runs every scenario through ReleaseCompat and the baselines and prints a confusion table.
+"""Runs every scenario through Migration Safety Checker and the baselines and prints a confusion table.
 
 Predictions ("unsafe" = the tool says the migration should be blocked):
-  releasecompat : any required check in the matrix fails
+  msc : any required check in the matrix fails
   ci-new-final  : the new version's tests fail on the final schema (what ordinary CI does)
   ci-old-final  : the old version's tests fail on the final schema
   squawk-default: Squawk reports any finding on the migration files (default rules)
@@ -16,8 +16,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-from releasecompat import config as cfgmod
-from releasecompat import runner
+from migration_safety_checker import config as cfgmod
+from migration_safety_checker import runner
 
 HERE = Path(__file__).resolve().parent
 SQUAWK = os.environ.get("SQUAWK") or shutil.which("squawk")
@@ -39,12 +39,12 @@ def main() -> int:
     rows = []
     for d in sorted((HERE / "scenarios").iterdir()):
         label = json.loads((d / "label.json").read_text())["label"]
-        cfg = cfgmod.load(d / "releasecompat.yml")
+        cfg = cfgmod.load(d / "msc.yml")
         rep = runner.run(cfg)
         final = f"after:{cfg.phases[-1].name}"
         by = {(r.check.kind, r.check.state.name): r.status for r in rep.results}
         pred = {
-            "releasecompat": not rep.safe,
+            "msc": not rep.safe,
             "ci-new-final": by.get(("new", final)) == runner.FAIL,
             "ci-old-final": by.get(("old", final)) == runner.FAIL,
             "squawk-default": squawk_unsafe(d, cfg),

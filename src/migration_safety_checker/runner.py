@@ -110,7 +110,7 @@ def _kill_group(proc: "subprocess.Popen[str]") -> None:
 
 def _shell(cfg: Config, command: str, env_url: str, check: Check, app: str) -> tuple[int, str]:
     env = dict(os.environ)
-    env.update({"DATABASE_URL": env_url, "RC_STATE": check.state.name, "RC_APP": app})
+    env.update({"DATABASE_URL": env_url, "MSC_STATE": check.state.name, "MSC_APP": app})
     return _run_command(command, cfg.root, env, cfg.timeout)
 
 
@@ -121,7 +121,7 @@ def _apply(
     db.apply_files(dbname, cfg.root, sql_files)
     env = dict(os.environ)
     env["DATABASE_URL"] = db.url(dbname)
-    env["RC_APP"] = "migrate"
+    env["MSC_APP"] = "migrate"
     for command in commands:
         code, out = _run_command(command, cfg.root, env, cfg.timeout)
         if code != 0:
@@ -238,7 +238,7 @@ def run(
             reason = " ".join(str(exc).split()) or "connection failed"
             raise RuntimeError(
                 f"cannot connect to PostgreSQL as {_describe(cfg.admin_url)} "
-                f"(RC_ADMIN_URL): {reason}"
+                f"(MSC_ADMIN_URL): {reason}"
             ) from None
         try:
             _apply(cfg, db, template, cfg.baseline_sql, cfg.baseline_run)

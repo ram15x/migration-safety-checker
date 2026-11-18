@@ -8,7 +8,7 @@ src="$here/../../../src"
 cd "$HC_APPS/wt/$tag"
 export PATH="$HC_APPS/venv-$tag/bin:$PATH"
 export PYTHONPATH="$PWD:$here:$src"
-export DJANGO_SETTINGS_MODULE=rc_settings
-export SECRET_KEY=rc-test
+export DJANGO_SETTINGS_MODULE=msc_settings
+export SECRET_KEY=msc-test
 if [ "$1" = "script" ]; then shift; exec python "$here/$1"; fi
 exec "$@"
