@@ -29,11 +29,11 @@ Across the runs, no check passed that I believe should have failed, and the cont
 
 ## What it did not catch
 
-- **A contract migration meeting rows the old version still writes.** In v3.9 to v3.10, 0118 would fail to apply in production if v3.9 created a NULL `badge_key` row between the backfill and the constraint. Migration Safety Checker only reports the symptom (`forward@after:backfill` fails). It never applies a phase on top of data written by the other version. That is a gap in the matrix.
+- **A contract migration meeting rows the old version still writes.** In v3.9 to v3.10, 0118 would fail to apply in production if v3.9 created a NULL `badge_key` row between the backfill and the constraint. migration-safety-checker only reports the symptom (`forward@after:backfill` fails). It never applies a phase on top of data written by the other version. That is a gap in the matrix.
 - **Locks and duration.** Nothing here measures how long a migration holds a lock on a large table. A linter such as Squawk covers that.
 - **Unselected tests.** Each side ran a chosen subset of the application's tests (ping, badge and check modules), not the whole suite. A break outside those modules is invisible.
 
-## Problems in Migration Safety Checker that the real application exposed
+## Problems in migration-safety-checker that the real application exposed
 
 All fixed in this commit.
 

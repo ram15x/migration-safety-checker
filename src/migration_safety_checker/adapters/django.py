@@ -1,4 +1,4 @@
-"""Generate a Migration Safety Checker configuration from a Django project's real migrations.
+"""Generate a migration-safety-checker configuration from a Django project's real migrations.
 
 Given a checkout of the old release and one of the new release, the adapter asks
 each checkout's own Django which migrations it has, takes the ones only the new

@@ -21,7 +21,7 @@ def _grid(report: Report) -> dict[str, dict[str, CheckResult]]:
 def to_markdown(report: Report) -> str:
     required = report.required
     lines = [
-        f"# Migration Safety Checker report: {report.name}",
+        f"# migration-safety-checker report: {report.name}",
         "",
         f"**Verdict: {report.verdict}** "
         f"({len(report.failed)} of {len(required)} required checks failed)",

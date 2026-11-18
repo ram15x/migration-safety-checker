@@ -1,7 +1,7 @@
 """Helpers for running a Django project's own tests against a prepared database.
 
 Django's test runner builds its own database by running the project's
-migrations, which hides exactly the states Migration Safety Checker constructs. These
+migrations, which hides exactly the states migration-safety-checker constructs. These
 helpers point the runner at the database named in ``DATABASE_URL`` and skip
 database creation. Use them from a small settings module:
 
@@ -56,7 +56,7 @@ class SchemaCloneMixin:
     the runner clones it, empties the clone's application tables, runs the
     tests there and drops the clone. Django bookkeeping tables and permissions
     are kept. The migrations are not run: the tests see exactly the schema
-    Migration Safety Checker built for this state.
+    migration-safety-checker built for this state.
 
     Projects with their own ``DiscoverRunner`` subclass combine the two:
     ``class Runner(SchemaCloneMixin, TheirRunner): pass``.

@@ -1,14 +1,14 @@
-# Migration Safety Checker
+# migration-safety-checker
 
 [![ci](https://github.com/ram15x/migration-safety-checker/actions/workflows/ci.yml/badge.svg)](https://github.com/ram15x/migration-safety-checker/actions/workflows/ci.yml)
 
 Rolling deploys run two versions of your application against one database at the same time. Migration tools check that the migration applies, and your test suite checks that the new code works on the final schema. The question that breaks production is different: **does every version that is allowed to run keep working in every intermediate state of the rollout, and can you roll back?**
 
-Teams often answer part of it by hand, running the previous release's tests against the new schema in CI. Migration Safety Checker automates that across every state of the rollout, in both directions.
+Teams often answer part of it by hand, running the previous release's tests against the new schema in CI. migration-safety-checker automates that across every state of the rollout, in both directions.
 
 ## How it works
 
-You describe the rollout as ordered phases (expand, backfill, contract, ...) and say which application versions may run after each one. Migration Safety Checker builds a database for every state, runs your real test commands against it, and reports a verdict.
+You describe the rollout as ordered phases (expand, backfill, contract, ...) and say which application versions may run after each one. migration-safety-checker builds a database for every state, runs your real test commands against it, and reports a verdict.
 
 For each state (baseline, mid-backfill, after each phase) it runs up to four checks:
 

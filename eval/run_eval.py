@@ -1,4 +1,4 @@
-"""Runs every scenario through Migration Safety Checker and the baselines and prints a confusion table.
+"""Runs every scenario through migration-safety-checker and the baselines and prints a confusion table.
 
 Predictions ("unsafe" = the tool says the migration should be blocked):
   migration-safety-checker : any required check in the matrix fails
