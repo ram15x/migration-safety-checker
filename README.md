@@ -175,12 +175,24 @@ django_runner.py         the project's own test runner plus that behaviour
 
 Python 3.10+, PostgreSQL (psycopg 3), Typer, Rich, PyYAML, pytest. The Django adapter runs against the project's own Django (5.x in the healthchecks runs). CI: GitHub Actions with a Postgres 16 service.
 
+## Install
+
+```bash
+python -m venv .venv && . .venv/bin/activate
+pip install "git+https://github.com/ram15x/migration-safety-checker.git@v0.1.0"
+git clone https://github.com/ram15x/migration-safety-checker && cd migration-safety-checker    # for the bundled examples
+export MIGRATION_SAFETY_CHECKER_ADMIN_URL=postgresql://postgres:postgres@localhost:5432/postgres
+migration-safety-checker check examples/rename-column/safe.yml
+```
+
+The example commands call `python`, so run them with the virtual environment active. Installed from GitHub in a clean virtual environment on Python 3.13, and from a local checkout with the full test suite on Python 3.10. Not published on PyPI.
+
 ## Build and run
 
 ```bash
 pip install -e ".[dev]"
 export MIGRATION_SAFETY_CHECKER_ADMIN_URL=postgresql://postgres:postgres@localhost:5432/postgres
-pytest -q                      # 33 tests, most need the database
+pytest -q                      # 56 tests, most need the database
 migration-safety-checker plan examples/rename-column/unsafe.yml
 migration-safety-checker check examples/rename-column/safe.yml --out report/
 ```
