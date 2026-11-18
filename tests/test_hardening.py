@@ -62,7 +62,7 @@ def test_missing_write_command_is_reported_as_not_run(tmp_path):
     )
     report = run(load(tmp_path / "migration-safety-checker.yml"))
     assert report.safe
-    assert {r.check.id for r in report.unconfigured} == {"forward@after:p", "rollback@after:p"}
+    assert {r.check.id for r in report.unconfigured} == {"live@before:p", "forward@after:p", "rollback@after:p"}
     assert "Not run, because the config has no command" in to_markdown(report)
 
 

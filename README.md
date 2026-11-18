@@ -10,7 +10,7 @@ Teams often answer part of it by hand, running the previous release's tests agai
 
 You describe the rollout as ordered phases (expand, backfill, contract, ...) and say which application versions may run after each one. migration-safety-checker builds a database for every state, runs your real test commands against it, and reports a verdict.
 
-For each state (baseline, mid-backfill, after each phase) it runs up to four checks:
+For each state (baseline, mid-backfill, after each phase) it runs up to four checks, and each phase gets one more:
 
 | Check | What runs | Catches |
 |---|---|---|
@@ -19,17 +19,23 @@ For each state (baseline, mid-backfill, after each phase) it runs up to four che
 | forward | old app writes, new app reads | rows the old version creates that the new version can't use |
 | rollback | new app writes, old app reads | rows the new version creates that a rollback can't read |
 
+| live data | old and new app write rows, then the phase is applied over them | a migration that fails on rows the running versions created (NOT NULL over NULLs, a unique index over duplicates, a constraint over old values) |
+
+The live-data check applies each phase on top of rows the versions running before it just wrote, so a migration that cannot apply to production data is reported as a migration failure, not as a later symptom. Each version writes `live_rows` rows (default 2, because some failures, such as a unique index, only appear with more than one row). It is skipped for a phase when no `write` command is configured, and can be turned off with `live: false`.
+
 Your own SQL invariants run after every check. Each check gets a fresh clone of a template database, so checks are isolated and repeatable.
 
 ```
 $ migration-safety-checker check migration-safety-checker.yml
 pass  old@baseline
+pass  live@before:rename
 FAIL  old@after:rename       old test exited with code 1
 pass  new@after:rename
 FAIL  forward@after:rename   old write exited with code 1
 FAIL  rollback@after:rename  old read after new write exited with code 1
 
-verdict: UNSAFE (3 of 5 required checks failed)
+verdict: UNSAFE (3 of 6 required checks failed)
+first failing state: after:rename
 ```
 
 Exit code is 0 for SAFE, 1 for UNSAFE, 2 for a setup error, so it drops straight into CI.
@@ -91,7 +97,7 @@ Each release's own Django reports its migration graph. Every migration only the 
 |---|---|---|---|
 | v3.2 to v3.3 | add nullable `badge_key` | SAFE | |
 | v3.4 to v3.5 | move `Ping.body` to `body_raw`, drop `body` (plus two later migrations) | UNSAFE | dropping `api_ping.body` breaks v3.4's tests, ping endpoint and reads |
-| v3.9 to v3.10 | `badge_key` default, backfill, NOT NULL | UNSAFE | v3.9 cannot create checks once the column is NOT NULL; earlier states give v3.10 checks with `None` in their badge URL |
+| v3.9 to v3.10 | `badge_key` default, backfill, NOT NULL | UNSAFE | v3.9 cannot create checks once the column is NOT NULL; 0118 fails to apply over two or more checks created by v3.9 (live-data check); earlier states give v3.10 checks with `None` in their badge URL |
 
 Each run takes 15 to 50 seconds. Configs, scripts and findings are in `eval/real`; `eval/real/healthchecks/generate.sh` regenerates the three configs with `init-django`.
 
@@ -101,17 +107,17 @@ Scope: three release pairs of one application, with a chosen subset of its tests
 
 ## Results on a labelled scenario set
 
-20 migration scenarios (10 safe, 10 unsafe) covering renames, drops, type changes, constraints, column splits, backfills, table renames and rollback hazards. Labels were fixed from each scenario's design before any tool was run. Predictions below mean "tool says block this migration".
+26 migration scenarios (13 safe, 13 unsafe) covering renames, drops, type changes, constraints, column splits, backfills, table renames, rollback hazards and constraints added over live rows. Labels were fixed from each scenario's design before any tool was run. Scenarios 21 to 26 were written after the live-data check existed, to exercise it. Predictions below mean "tool says block this migration".
 
 | Tool | TP | FP | FN | TN | Precision | Recall |
 |---|---|---|---|---|---|---|
-| migration-safety-checker | 10 | 0 | 0 | 10 | 1.00 | 1.00 |
-| New app's tests on final schema (ordinary CI) | 0 | 0 | 10 | 10 | n/a | 0.00 |
-| Old app's tests on final schema | 7 | 0 | 3 | 10 | 1.00 | 0.70 |
-| Squawk 2.73, default rules | 10 | 10 | 0 | 0 | 0.50 | 1.00 |
-| Squawk 2.73, timeout/idempotence rules excluded | 9 | 7 | 1 | 3 | 0.56 | 0.90 |
+| migration-safety-checker | 13 | 0 | 0 | 13 | 1.00 | 1.00 |
+| New app's tests on final schema (ordinary CI) | 0 | 0 | 13 | 13 | n/a | 0.00 |
+| Old app's tests on final schema | 7 | 0 | 6 | 13 | 1.00 | 0.54 |
+| Squawk 2.73, default rules | 13 | 13 | 0 | 0 | 0.50 | 1.00 |
+| Squawk 2.73, timeout/idempotence rules excluded | 12 | 10 | 1 | 3 | 0.55 | 0.92 |
 
-The three unsafe cases that final-state testing cannot see are the column split without sync, the rollback with unreadable new values, and the half-finished backfill. Those are the ones that need the intermediate-state and rollback checks.
+Six unsafe cases are invisible to testing on the final schema: the column split without sync, the rollback with unreadable new values, the half-finished backfill, and the three constraints added over live rows (21 to 23). The first three need the intermediate-state and rollback checks; the last three need the live-data check, and with it switched off (`live: false`) the tool catches 10 of the 13 unsafe scenarios and misses exactly 21 to 23.
 
 Squawk is a static linter for lock and style hazards. It answers a different question (will this statement block writes) and its findings here reflect that, so the comparison shows the two are complementary, not that one replaces the other.
 

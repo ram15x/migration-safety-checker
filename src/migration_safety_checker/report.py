@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import xml.etree.ElementTree as ET
 
-from .matrix import FORWARD, NEW, OLD, ROLLBACK
+from .matrix import FORWARD, LIVE, NEW, OLD, ROLLBACK
 from .runner import FAIL, PASS, SKIPPED, CheckResult, Report
 
 _ICON = {PASS: "pass", FAIL: "FAIL", SKIPPED: "-"}
@@ -14,6 +14,8 @@ _ICON = {PASS: "pass", FAIL: "FAIL", SKIPPED: "-"}
 def _grid(report: Report) -> dict[str, dict[str, CheckResult]]:
     grid: dict[str, dict[str, CheckResult]] = {}
     for r in report.results:
+        if r.check.kind == LIVE:
+            continue
         grid.setdefault(r.check.state.name, {})[r.check.kind] = r
     return grid
 
@@ -34,6 +36,10 @@ def to_markdown(report: Report) -> str:
         for kind in (OLD, NEW, FORWARD, ROLLBACK):
             row.append(_ICON[cells[kind].status])
         lines.append("| " + " | ".join(row) + " |")
+    live = [r for r in report.results if r.check.kind == LIVE]
+    if live:
+        lines += ["", "| Phase applied over live rows | Result |", "|---|---|"]
+        lines += [f"| {r.check.phase.name} | {_ICON[r.status]} |" for r in live]
     if report.first_failing_state:
         lines += [
             "",

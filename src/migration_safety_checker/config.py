@@ -66,6 +66,8 @@ class Config:
     invariants: list[Invariant] = field(default_factory=list)
     rollback: bool = True
     forward: bool = True
+    live: bool = True
+    live_rows: int = 2
     new_on_baseline: bool = False
     timeout: int = 120
 
@@ -177,9 +179,14 @@ def load(path: str | os.PathLike[str]) -> Config:
         invariants=invariants,
         rollback=bool(raw.get("rollback", True)),
         forward=bool(raw.get("forward", True)),
+        live=bool(raw.get("live", True)),
+        live_rows=int(raw.get("live_rows", 2)),
         new_on_baseline=bool(raw.get("new_on_baseline", False)),
         timeout=int(raw.get("timeout", 120)),
     )
+
+    if cfg.live_rows < 1:
+        raise ConfigError("live_rows must be at least 1")
 
     for rel in cfg.baseline_sql + [p for ph in phases for p in ph.sql + ph.partial_sql]:
         if not (root / rel).is_file():

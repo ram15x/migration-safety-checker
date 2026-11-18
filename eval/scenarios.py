@@ -318,6 +318,62 @@ SCENARIOS: list[Scenario] = [
         ],
         users_app(), users_app(first="given_name"),
     ),
+    # -- live-data scenarios (21-26) -------------------------------------------
+    # Written after the live-data check was implemented, to exercise it. Labels were
+    # fixed from the SQL below before the tool ran. In 21-23 the old version is retired
+    # by the last phase, so nothing exercises old code after it; the only way to see the
+    # failure is to apply the phase over rows the old version wrote while it was live.
+    Scenario(
+        "21_not_null_over_old_nulls", "unsafe",
+        "Backfills nickname, then sets NOT NULL. Old instances kept inserting NULL nicknames "
+        "after the backfill, so the contract step fails on live rows.",
+        [
+            Phase("backfill", "UPDATE users SET nickname = first_name WHERE nickname IS NULL;"),
+            Phase("contract", "ALTER TABLE users ALTER COLUMN nickname SET NOT NULL;", old_may_run=False),
+        ],
+        users_app(), users_app(extra={"nickname": "nick-{uid}"}),
+    ),
+    Scenario(
+        "22_unique_over_old_duplicates", "unsafe",
+        "Adds a unique index on orders(user_id). The old version keeps creating a second order "
+        "for user 1, so the index cannot be built over live rows.",
+        [Phase("enforce", "CREATE UNIQUE INDEX orders_user_uq ON orders (user_id);", old_may_run=False)],
+        {"write": [ins("orders", user_id=1, qty=1)], "read": [sel("SELECT id, user_id, qty FROM orders", min_rows=1)]},
+        {"write": [ins("orders", user_id=3, qty=1)], "read": [sel("SELECT id, user_id, qty FROM orders", min_rows=1)]},
+    ),
+    Scenario(
+        "23_check_over_old_zero_qty", "unsafe",
+        "Adds CHECK (qty > 0). The old version writes qty = 0 for reservations, so the "
+        "constraint cannot be added over live rows.",
+        [Phase("enforce", "ALTER TABLE orders ADD CONSTRAINT qty_positive CHECK (qty > 0);", old_may_run=False)],
+        {"write": [ins("orders", user_id=1, qty=0)], "read": [sel("SELECT id, user_id, qty FROM orders", min_rows=1)]},
+        {"write": [ins("orders", user_id=1, qty=1)], "read": [sel("SELECT id, user_id, qty FROM orders", min_rows=1)]},
+    ),
+    Scenario(
+        "24_unique_lower_email_old_unique", "safe",
+        "Adds a unique index on lower(email). The old version writes distinct emails, so the "
+        "index builds over live rows.",
+        [Phase("enforce", "CREATE UNIQUE INDEX users_email_lower_uq ON users (lower(email));", old_may_run=False)],
+        users_app(), users_app(),
+    ),
+    Scenario(
+        "25_check_nonneg_old_positive", "safe",
+        "Adds CHECK (qty >= 0). The old version only writes positive quantities.",
+        [Phase("enforce", "ALTER TABLE orders ADD CONSTRAINT qty_nonneg CHECK (qty >= 0);", old_may_run=False)],
+        {"write": [ins("orders", user_id=1, qty=1)], "read": [sel("SELECT id, user_id, qty FROM orders", min_rows=1)]},
+        {"write": [ins("orders", user_id=1, qty=2)], "read": [sel("SELECT id, user_id, qty FROM orders", min_rows=1)]},
+    ),
+    Scenario(
+        "26_not_null_with_default_first", "safe",
+        "Sets a default first, backfills, then sets NOT NULL. Rows written by the old version "
+        "after the default exist get a value, so the contract step succeeds.",
+        [
+            Phase("expand", "ALTER TABLE users ALTER COLUMN nickname SET DEFAULT 'none';"),
+            Phase("backfill", "UPDATE users SET nickname = first_name WHERE nickname IS NULL;"),
+            Phase("contract", "ALTER TABLE users ALTER COLUMN nickname SET NOT NULL;", old_may_run=False),
+        ],
+        users_app(), users_app(extra={"nickname": "nick-{uid}"}),
+    ),
 ]
 
 

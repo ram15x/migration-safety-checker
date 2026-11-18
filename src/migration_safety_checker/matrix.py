@@ -15,6 +15,7 @@ OLD = "old"
 NEW = "new"
 ROLLBACK = "rollback"
 FORWARD = "forward"
+LIVE = "live"
 
 
 @dataclass
@@ -33,6 +34,7 @@ class Check:
     kind: str
     required: bool
     note: str = ""
+    phase: Phase | None = None  # for LIVE checks: the phase applied over live rows
 
 
 def build_states(cfg: Config) -> list[State]:
@@ -65,9 +67,40 @@ def build_states(cfg: Config) -> list[State]:
     return states
 
 
+def _live_check(cfg: Config, index: int) -> Check:
+    """Apply phase ``index`` on top of rows the versions running before it just wrote."""
+    phase = cfg.phases[index]
+    if index == 0:
+        old_up, new_up = True, cfg.new_on_baseline
+    else:
+        old_up, new_up = cfg.phases[index - 1].old_may_run, cfg.phases[index - 1].new_may_run
+    state = State(
+        name=f"before:{phase.name}", applied=cfg.phases[:index],
+        old_required=old_up, new_required=new_up,
+    )
+    can_write = (old_up and cfg.old.write is not None) or (new_up and cfg.new.write is not None)
+    if not cfg.live:
+        note = "live-data checks are disabled"
+    elif not (old_up or new_up):
+        note = "no application version runs before this phase"
+    elif not can_write:
+        note = "apps.old.write is not configured"
+    else:
+        note = ""
+    return Check(
+        id=f"{LIVE}@before:{phase.name}", state=state, kind=LIVE,
+        required=cfg.live and can_write, note=note, phase=phase,
+    )
+
+
 def build_checks(cfg: Config) -> list[Check]:
     checks: list[Check] = []
+    live_emitted: set[str] = set()
     for state in build_states(cfg):
+        phase_name = state.name.split(":", 1)[1] if ":" in state.name else None
+        if phase_name and phase_name not in live_emitted:
+            live_emitted.add(phase_name)
+            checks.append(_live_check(cfg, [p.name for p in cfg.phases].index(phase_name)))
         checks.append(
             Check(
                 id=f"{OLD}@{state.name}",

@@ -19,7 +19,8 @@ pytestmark = pytest.mark.skipif(
 def test_expand_contract_rename_is_safe():
     report = run(load(EXAMPLES / "safe.yml"))
     assert report.safe, [r.detail for r in report.failed]
-    assert len(report.required) == 6
+    # six per-state checks plus one live-data check for each of the two phases
+    assert len(report.required) == 8
 
 
 def test_direct_rename_is_unsafe_for_old_app_and_rollback():

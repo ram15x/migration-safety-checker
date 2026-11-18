@@ -18,7 +18,7 @@ from psycopg.conninfo import conninfo_to_dict, make_conninfo
 
 from .config import Config
 from .db import Database
-from .matrix import FORWARD, NEW, OLD, ROLLBACK, Check, build_checks
+from .matrix import FORWARD, LIVE, NEW, OLD, ROLLBACK, Check, build_checks
 
 PASS = "pass"
 FAIL = "fail"
@@ -69,8 +69,20 @@ class Report:
 
 
 def _trim(text: str) -> str:
+    """Keep the start and the end of long output: the error is usually at the end."""
     text = text.strip()
-    return text if len(text) <= LOG_LIMIT else text[:LOG_LIMIT] + "\n... (truncated)"
+    if len(text) <= LOG_LIMIT:
+        return text
+    head = LOG_LIMIT // 8
+    return text[:head] + "\n... (truncated) ...\n" + text[-(LOG_LIMIT - head):]
+
+
+def _last_line(message: str) -> str:
+    lines = [ln.strip() for ln in str(message).splitlines() if ln.strip()]
+    for line in reversed(lines):
+        if "Error" in line or "Exception" in line or "error:" in line:
+            return line
+    return lines[-1] if lines else "failed"
 
 
 def _run_command(command: str, cwd: Path, env: dict[str, str], timeout: int) -> tuple[int, str]:
@@ -128,6 +140,64 @@ def _apply(
             raise RuntimeError(f"exit {code}: {command}\n{out}")
 
 
+def _execute_live(cfg: Config, db: Database, name: str, check: Check, started: float) -> CheckResult:
+    """Write rows with the versions running before the phase, then apply the phase over them."""
+    state, phase = check.state, check.phase
+    assert phase is not None
+    try:
+        for earlier in state.applied:
+            _apply(cfg, db, name, earlier.sql, earlier.run)
+    except (psycopg.Error, RuntimeError) as exc:
+        return CheckResult(
+            check, FAIL, f"migration failed before the application ran: {exc}",
+            duration=time.monotonic() - started,
+        )
+    url = db.url(name)
+    logs: list[str] = []
+    writers: list[str] = []
+    for label, command, app, running in (
+        ("old write", cfg.old.write, OLD, state.old_required),
+        ("new write", cfg.new.write, NEW, state.new_required),
+    ):
+        if not running or not command:
+            continue
+        for _ in range(cfg.live_rows):
+            code, out = _shell(cfg, command, url, check, app)
+            if out:
+                logs.append(f"[{label}]\n{out}")
+            if code != 0:
+                return CheckResult(
+                    check, SKIPPED,
+                    f"could not write live rows ({label} exited with code {code}); "
+                    "this phase was not tested over live data",
+                    log="\n\n".join(logs), duration=time.monotonic() - started,
+                )
+        writers.append(app)
+    try:
+        _apply(cfg, db, name, phase.sql, phase.run)
+    except (psycopg.Error, RuntimeError) as exc:
+        return CheckResult(
+            check, FAIL,
+            f"phase '{phase.name}' failed on rows written by the {' and '.join(writers)} version: "
+            f"{_last_line(exc)}",
+            log="\n\n".join(logs + [str(exc)]), duration=time.monotonic() - started,
+        )
+    for inv in cfg.invariants:
+        try:
+            rows = db.violations(name, inv.sql)
+        except psycopg.Error as exc:
+            return CheckResult(
+                check, FAIL, f"invariant '{inv.name}' could not run: {str(exc).splitlines()[0]}",
+                log="\n\n".join(logs), duration=time.monotonic() - started,
+            )
+        if rows:
+            return CheckResult(
+                check, FAIL, f"invariant '{inv.name}' violated by {len(rows)} row(s) after the phase",
+                log="\n\n".join(logs), duration=time.monotonic() - started,
+            )
+    return CheckResult(check, PASS, log="\n\n".join(logs), duration=time.monotonic() - started)
+
+
 def _execute(cfg: Config, db: Database, template: str, check: Check) -> CheckResult:
     name = db.new_name(check.id)
     started = time.monotonic()
@@ -139,6 +209,8 @@ def _execute(cfg: Config, db: Database, template: str, check: Check) -> CheckRes
             duration=time.monotonic() - started,
         )
     try:
+        if check.kind == LIVE:
+            return _execute_live(cfg, db, name, check, started)
         try:
             for phase in check.state.applied:
                 _apply(cfg, db, name, phase.sql, phase.run)
