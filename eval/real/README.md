@@ -42,7 +42,7 @@ All fixed in this commit.
 3. Test suites that assume empty tables failed on a seeded baseline. Apps can now define a `read` command for the forward and rollback checks, and `releasecompat.django_support` runs a Django suite on an empty clone of the prepared schema without running migrations.
 4. An invariant whose SQL could not run (for example, it named a column the phase had dropped) crashed the tool with a traceback. It is now a failed check with the database error.
 
-Still open: `report.json` does not include command logs (the Markdown report does), and a check that fails because of a harness problem looks the same as one that fails because of the migration. The first control run was a false UNSAFE caused by a write script that assumed an API field absent in older releases.
+Still open: a check that fails because of a harness problem looks the same as one that fails because of the migration. The first control run was a false UNSAFE caused by a write script that assumed an API field absent in older releases.
 
 ## Reproduce
 

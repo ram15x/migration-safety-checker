@@ -95,6 +95,8 @@ Each release's own Django reports its migration graph. Every migration only the 
 
 Each run takes 15 to 50 seconds. Configs, scripts and findings are in `eval/real`; `eval/real/healthchecks/generate.sh` regenerates the three configs with `init-django`.
 
+UNSAFE here means unsafe under a rolling deploy, where the old version keeps running during the migration. It is not a bug in healthchecks.
+
 Scope: three release pairs of one application, with a chosen subset of its tests. The v3.9 to v3.10 badge URL finding comes from a read check written for this run.
 
 ## Results on a labelled scenario set
