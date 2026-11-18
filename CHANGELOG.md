@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Reusable composite GitHub Action (`action.yml`): installs the tool, runs the check, fails unless the verdict matches `expect` (safe or unsafe), uploads `report.md` and `junit.xml`. Tested in this repository's CI.
+- Evidence on two more real applications: full-stack-fastapi-template (two release pairs, nine mutants) and Mealie (three release pairs, four mutants); see `eval/real`.
 - `init-alembic`: generate a configuration from the Alembic revisions the new release adds, with notes on risky operations read from each revision's `upgrade()`. Two bundled examples (`examples/alembic`: NOT NULL column without a default is caught, a nullable one passes). Application commands run through the same wrapper, so they see the SQLAlchemy URL; `--url-part` exports host, port, user, password or database name for applications that assemble their own URL.
 
 ## 0.1.0 (2026-11-18)

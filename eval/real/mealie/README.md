@@ -60,3 +60,5 @@ is the mode's assumption, not a hazard of the migrations, and is why `--migrate-
 Missing `psycopg2` and the required `PRODUCTION` setting made the first manual migration attempts fail. The
 adapter runs received `PRODUCTION`, `DB_ENGINE` and `DATA_DIR` through `--env`. None of the tool runs above hit a
 harness failure.
+
+Note on history: `labels.yml` was committed before the first run, but that commit was squashed into the commit that adds the results (one commit per task was requested), so the git history no longer shows the order. Take it as the author's statement.

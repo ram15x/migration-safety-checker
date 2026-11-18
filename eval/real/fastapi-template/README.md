@@ -86,3 +86,5 @@ These are setup problems, listed because the tool reported some of them as resul
 Weakness this exposed in the tool: when the old release's own tests fail on the unmodified baseline, the verdict
 is still `UNSAFE` (first failing state `baseline`) instead of a warning that the suite is red before any migration
 runs. Not fixed in this round.
+
+Note on history: `labels.yml` was committed before the first run, but that commit was squashed into the commit that adds the results (one commit per task was requested), so the git history no longer shows the order. Take it as the author's statement.
