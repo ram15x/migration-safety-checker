@@ -10,6 +10,8 @@ Predictions ("unsafe" = the tool says the migration should be blocked):
 from __future__ import annotations
 
 import json
+import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -18,19 +20,18 @@ from releasecompat import config as cfgmod
 from releasecompat import runner
 
 HERE = Path(__file__).resolve().parent
-SQUAWK = "/tmp/sq/node_modules/.bin/squawk"
+SQUAWK = os.environ.get("SQUAWK") or shutil.which("squawk")
 
 
 HOUSEKEEPING = "require-lock-timeout,require-statement-timeout,prefer-robust-stmts"
 
 
 def squawk_unsafe(root: Path, cfg, exclude: str = "") -> bool | None:
+    if not SQUAWK:
+        return None
     files = [f for ph in cfg.phases for f in ph.sql]
     args = ["--exclude", exclude] if exclude else []
-    try:
-        r = subprocess.run([SQUAWK, *args, *[str(root / f) for f in files]], capture_output=True, text=True, timeout=60)
-    except FileNotFoundError:
-        return None
+    r = subprocess.run([SQUAWK, *args, *[str(root / f) for f in files]], capture_output=True, text=True, timeout=60)
     return r.returncode != 0
 
 
@@ -49,11 +50,14 @@ def main() -> int:
             "squawk-default": squawk_unsafe(d, cfg),
             "squawk-compat": squawk_unsafe(d, cfg, HOUSEKEEPING),
         }
+        pred = {k: v for k, v in pred.items() if v is not None}  # drop tools that could not run
         failed = ", ".join(f"{r.check.kind}@{r.check.state.name}" for r in rep.failed)
         rows.append((d.name, label, pred, failed))
         print(f"{d.name:42s} label={label:6s} " + " ".join(f"{k}={'U' if v else 'S'}" for k, v in pred.items()) + (f"  [{failed}]" if failed else ""), flush=True)
 
     print()
+    if not SQUAWK:
+        print("squawk not found (set SQUAWK or put it on PATH): its rows are omitted\n")
     tools = list(rows[0][2])
     print(f"{'tool':15s} TP FP FN TN  precision recall")
     out = {}
