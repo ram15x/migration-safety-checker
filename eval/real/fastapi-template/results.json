@@ -357,25 +357,25 @@
         "status": "fail",
         "cause": "migration",
         "required": true,
-        "detail": "migration failed before the application ran: exit 1: cd /home/claude/work/apps/mutants/M1_not_null_no_default/backend && env PROJECT_NAME='Full Stack FastAPI Project' SECRET_KEY=eval-secret-key-not-fo"
+        "detail": "migration failed before the application ran: exit 1: cd <workdir>/mutants/M1_not_null_no_default/backend && env PROJECT_NAME='Full Stack FastAPI Project' SECRET_KEY=eval-secret-key-not-fo"
       },
       "new@after:fe56fa70289e_add_created_at_to_user_and_item": {
         "status": "fail",
         "cause": "migration",
         "required": true,
-        "detail": "migration failed before the application ran: exit 1: cd /home/claude/work/apps/mutants/M1_not_null_no_default/backend && env PROJECT_NAME='Full Stack FastAPI Project' SECRET_KEY=eval-secret-key-not-fo"
+        "detail": "migration failed before the application ran: exit 1: cd <workdir>/mutants/M1_not_null_no_default/backend && env PROJECT_NAME='Full Stack FastAPI Project' SECRET_KEY=eval-secret-key-not-fo"
       },
       "forward@after:fe56fa70289e_add_created_at_to_user_and_item": {
         "status": "fail",
         "cause": "migration",
         "required": true,
-        "detail": "migration failed before the application ran: exit 1: cd /home/claude/work/apps/mutants/M1_not_null_no_default/backend && env PROJECT_NAME='Full Stack FastAPI Project' SECRET_KEY=eval-secret-key-not-fo"
+        "detail": "migration failed before the application ran: exit 1: cd <workdir>/mutants/M1_not_null_no_default/backend && env PROJECT_NAME='Full Stack FastAPI Project' SECRET_KEY=eval-secret-key-not-fo"
       },
       "rollback@after:fe56fa70289e_add_created_at_to_user_and_item": {
         "status": "fail",
         "cause": "migration",
         "required": true,
-        "detail": "migration failed before the application ran: exit 1: cd /home/claude/work/apps/mutants/M1_not_null_no_default/backend && env PROJECT_NAME='Full Stack FastAPI Project' SECRET_KEY=eval-secret-key-not-fo"
+        "detail": "migration failed before the application ran: exit 1: cd <workdir>/mutants/M1_not_null_no_default/backend && env PROJECT_NAME='Full Stack FastAPI Project' SECRET_KEY=eval-secret-key-not-fo"
       }
     }
   },
@@ -678,25 +678,25 @@
         "status": "fail",
         "cause": "migration",
         "required": true,
-        "detail": "migration failed before the application ran: exit 1: cd /home/claude/work/apps/mutants/M6_email_varchar_10/backend && env PROJECT_NAME='Full Stack FastAPI Project' SECRET_KEY=eval-secret-key-not-for-p"
+        "detail": "migration failed before the application ran: exit 1: cd <workdir>/mutants/M6_email_varchar_10/backend && env PROJECT_NAME='Full Stack FastAPI Project' SECRET_KEY=eval-secret-key-not-for-p"
       },
       "new@after:fe56fa70289e_add_created_at_to_user_and_item": {
         "status": "fail",
         "cause": "migration",
         "required": true,
-        "detail": "migration failed before the application ran: exit 1: cd /home/claude/work/apps/mutants/M6_email_varchar_10/backend && env PROJECT_NAME='Full Stack FastAPI Project' SECRET_KEY=eval-secret-key-not-for-p"
+        "detail": "migration failed before the application ran: exit 1: cd <workdir>/mutants/M6_email_varchar_10/backend && env PROJECT_NAME='Full Stack FastAPI Project' SECRET_KEY=eval-secret-key-not-for-p"
       },
       "forward@after:fe56fa70289e_add_created_at_to_user_and_item": {
         "status": "fail",
         "cause": "migration",
         "required": true,
-        "detail": "migration failed before the application ran: exit 1: cd /home/claude/work/apps/mutants/M6_email_varchar_10/backend && env PROJECT_NAME='Full Stack FastAPI Project' SECRET_KEY=eval-secret-key-not-for-p"
+        "detail": "migration failed before the application ran: exit 1: cd <workdir>/mutants/M6_email_varchar_10/backend && env PROJECT_NAME='Full Stack FastAPI Project' SECRET_KEY=eval-secret-key-not-for-p"
       },
       "rollback@after:fe56fa70289e_add_created_at_to_user_and_item": {
         "status": "fail",
         "cause": "migration",
         "required": true,
-        "detail": "migration failed before the application ran: exit 1: cd /home/claude/work/apps/mutants/M6_email_varchar_10/backend && env PROJECT_NAME='Full Stack FastAPI Project' SECRET_KEY=eval-secret-key-not-for-p"
+        "detail": "migration failed before the application ran: exit 1: cd <workdir>/mutants/M6_email_varchar_10/backend && env PROJECT_NAME='Full Stack FastAPI Project' SECRET_KEY=eval-secret-key-not-for-p"
       }
     }
   },

@@ -20,6 +20,19 @@ MODE = os.environ.get("MODE", "default")      # "migrate-first" adds --migrate-f
 ENV = ["--env=PRODUCTION=True", "--env=DB_ENGINE=postgres", f"--env=DATA_DIR={OUT}/data"]
 
 
+def scrub(value):
+    """Replace this machine's absolute paths in a result with placeholders so committed files carry none."""
+    if isinstance(value, str):
+        for real, placeholder in ((str(HERE), "<repo>/eval/real/%s" % HERE.name), (str(APPS), "<workdir>"), (str(OUT), "<scratch>")):
+            value = value.replace(real, placeholder)
+        return value
+    if isinstance(value, list):
+        return [scrub(v) for v in value]
+    if isinstance(value, dict):
+        return {scrub(k): scrub(v) for k, v in value.items()}
+    return value
+
+
 def release(tag):
     return APPS / f"mea-{tag}", str(APPS / f"mvenv-{tag}" / "bin" / "python")
 
@@ -66,7 +79,7 @@ def main():
         res = case(case_id, old, new)
         print("  ->", res.get("verdict", res.get("error")), res.get("first_failing_state"), flush=True)
         results.append(res)
-    (HERE / ("results-default-mode.json" if MODE == "default" else "results-migrate-first.json")).write_text(json.dumps(results, indent=2) + "\n")
+    (HERE / ("results-default-mode.json" if MODE == "default" else "results-migrate-first.json")).write_text(json.dumps(scrub(results), indent=2) + "\n")
 
 
 if __name__ == "__main__":

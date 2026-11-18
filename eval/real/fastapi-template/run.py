@@ -30,6 +30,19 @@ ENV = ["PROJECT_NAME=Full Stack FastAPI Project", "SECRET_KEY=eval-secret-key-no
        "SMTP_HOST=localhost", "EMAILS_FROM_EMAIL=info@example.com"]
 
 
+def scrub(value):
+    """Replace this machine's absolute paths in a result with placeholders so committed files carry none."""
+    if isinstance(value, str):
+        for real, placeholder in ((str(HERE), "<repo>/eval/real/%s" % HERE.name), (str(APPS), "<workdir>"), (str(OUT), "<scratch>")):
+            value = value.replace(real, placeholder)
+        return value
+    if isinstance(value, list):
+        return [scrub(v) for v in value]
+    if isinstance(value, dict):
+        return {scrub(k): scrub(v) for k, v in value.items()}
+    return value
+
+
 def release(tag: str) -> tuple[Path, str]:
     return APPS / f"tpl-{tag}" / "backend", str(APPS / f"venv-{tag}" / "bin" / "python")
 
@@ -74,7 +87,7 @@ def main() -> None:
         print("  ->", res.get("verdict", res.get("error")), res.get("first_failing_state"), flush=True)
         results.append(res)
     path = HERE / "results.json"
-    path.write_text(json.dumps(results, indent=2) + "\n")
+    path.write_text(json.dumps(scrub(results), indent=2) + "\n")
     print("wrote", path)
 
 
