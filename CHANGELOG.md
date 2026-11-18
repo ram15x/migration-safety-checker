@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `init-alembic`: generate a configuration from the Alembic revisions the new release adds, with notes on risky operations read from each revision's `upgrade()`. Two bundled examples (`examples/alembic`: NOT NULL column without a default is caught, a nullable one passes). Application commands run through the same wrapper, so they see the SQLAlchemy URL; `--url-part` exports host, port, user, password or database name for applications that assemble their own URL.
+
 ## 0.1.0 (2026-11-18)
 
 First tagged version.

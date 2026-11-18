@@ -17,7 +17,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "alembic>=1.13", "sqlalchemy>=2"]
 
 [project.scripts]
 migration-safety-checker = "migration_safety_checker.cli:app"

@@ -1,0 +1,42 @@
+# Expected results, written from reading the migrations BEFORE the tool was run on any Mealie case.
+# `label` is the verdict a careful reviewer would give for a rolling deploy of the schema change;
+# `check_sees` says whether the only app-level check available here (smoke_read.py, read-only) can see it.
+#
+# App test: smoke_read.py selects from every table the release's own ORM models map. There is no write or
+# read command, so the live-data, forward and rollback checks are not configured and do not run.
+
+real_pairs:
+  - id: P1_v3.18.0_to_v3.19.0
+    label: SAFE
+    reason: "One revision (2187537c52b8) only creates three new tables (AI provider settings, providers, headers). The old release maps none of them."
+  - id: P2_v3.19.0_to_v3.25.0
+    label: SAFE
+    reason: "One revision (69e942bab3aa) adds a nullable users.tokens_valid_after column; the old release neither selects nor inserts it."
+  - id: P3_v3.25.0_to_v3.26.0
+    label: SAFE
+    reason: >
+      Four revisions: a nullable users.external_avatar_hash column, two new substitution tables, a data
+      backfill of recipes.image (sets image NULL where no file is found on disk; irreversible but the
+      column is nullable and the old release reads NULL), and a new link table plus a nullable
+      notes.reference_id that the migration fills with UUIDs for existing rows. Schema-compatible with
+      the old release. Possible data-semantics hazard that no check here can see: notes the old release writes
+      after the backfill keep reference_id NULL, which the new release may not expect.
+    caveat: "SAFE is the label for schema compatibility only."
+
+mutants:     # old = v3.19.0, new = v3.25.0 with the tokens_valid_after migration changed as described
+  - id: MM1_drop_users_full_name
+    label: UNSAFE
+    reason: "Drops users.full_name, which both releases map and select."
+    check_sees: yes
+  - id: MM2_rename_recipes_name
+    label: UNSAFE
+    reason: "Renames recipes.name, which both releases map and select."
+    check_sees: yes
+  - id: MM3_not_null_no_default
+    label: UNSAFE
+    reason: "Adds users.tokens_valid_after NOT NULL with no default: every old insert into users fails."
+    check_sees: no
+    expected_tool_result: SAFE      # the smoke test only reads and the baseline tables are empty, so a miss is expected
+  - id: MM4_not_null_server_default
+    label: SAFE
+    reason: "NOT NULL with server_default now(): old inserts get a value."

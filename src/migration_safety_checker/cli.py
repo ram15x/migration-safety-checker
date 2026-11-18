@@ -91,6 +91,59 @@ def init_django(
     console.print(f"next: migration-safety-checker check {path}")
 
 
+@app.command("init-alembic")
+def init_alembic(
+    old: Path = typer.Option(..., "--old", help="Checkout of the release still serving traffic"),
+    new: Path = typer.Option(..., "--new", help="Checkout of the release being rolled out"),
+    test: str = typer.Option(..., "--test", help="Shell command that runs the application's tests, from the release directory; {python} is the release's interpreter"),
+    out: Path = typer.Option(Path("checks"), "--out", help="Directory for the generated files"),
+    old_python: str = typer.Option(sys.executable, "--old-python", help="Interpreter of the old release's environment (needs alembic)"),
+    new_python: str = typer.Option(sys.executable, "--new-python", help="Interpreter of the new release's environment (needs alembic)"),
+    config: str = typer.Option("alembic.ini", "--config", help="Alembic config file, relative to each checkout"),
+    seed: str = typer.Option("", "--seed", help="Shell command that loads baseline data through the old release"),
+    write: str = typer.Option("", "--write", help="Shell command: write data through the release's own code"),
+    read: str = typer.Option("", "--read", help="Shell command: read the data already in the database"),
+    env: list[str] = typer.Option([], "--env", help="KEY=VALUE for every command (repeatable)"),
+    url_env: list[str] = typer.Option([], "--url-env", help="Variable your env.py reads the database URL from (repeatable; default DATABASE_URL)"),
+    url_part: list[str] = typer.Option([], "--url-part", help="NAME=PART (host, port, user, password or dbname) exported for apps that build their own URL (repeatable)"),
+    driver: str = typer.Option("", "--driver", help="SQLAlchemy driver to put in the URL, e.g. psycopg"),
+    migrate_first: bool = typer.Option(False, "--migrate-first", help="All revisions run before the new release starts (e.g. `alembic upgrade head` in a pre-start step): require the new release only after the last one"),
+) -> None:
+    """Generate a configuration from the Alembic revisions the new release adds."""
+    from .adapters.alembic import Options, Release, generate
+    from .adapters.django import AdapterError
+
+    pairs = {}
+    for item in env:
+        if "=" not in item:
+            console.print(f"[red]error:[/red] --env expects KEY=VALUE, got '{item}'")
+            raise typer.Exit(code=2)
+        key, value = item.split("=", 1)
+        pairs[key] = value
+    parts = {}
+    for item in url_part:
+        name, _, part = item.partition("=")
+        if part not in ("host", "port", "user", "password", "dbname"):
+            console.print(f"[red]error:[/red] --url-part expects NAME=PART with PART one of host, port, user, password, dbname; got '{item}'")
+            raise typer.Exit(code=2)
+        parts[name] = part
+    opts = Options(
+        old=Release(old.resolve(), old_python, test), new=Release(new.resolve(), new_python, test),
+        out=out.resolve(), config=config, seed=seed, write=write, read=read, env=pairs,
+        url_env=url_env or ["DATABASE_URL"], url_parts=parts, driver=driver, migrate_first=migrate_first,
+    )
+    try:
+        path, phases = generate(opts)
+    except AdapterError as exc:
+        console.print(f"[red]error:[/red] {exc}")
+        raise typer.Exit(code=2)
+    console.print(f"wrote {path} with {len(phases)} phase(s):")
+    for r in phases:
+        extra = f"  ({'; '.join(r.notes)})" if r.notes else ""
+        console.print(f"  {r.label}{extra}", highlight=False)
+    console.print(f"next: migration-safety-checker check {path}")
+
+
 @app.command()
 def check(
     config: Path = typer.Argument(..., help="Path to migration-safety-checker.yml"),

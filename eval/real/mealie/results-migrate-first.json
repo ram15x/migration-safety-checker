@@ -1,0 +1,544 @@
+[
+  {
+    "id": "P1_v3.18.0_to_v3.19.0",
+    "verdict": "SAFE",
+    "exit": 0,
+    "first_failing_state": null,
+    "triage": {},
+    "phases": 1,
+    "checks": {
+      "old@baseline": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "new version is not deployed in this state"
+      },
+      "forward@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "old and new versions do not overlap in this state"
+      },
+      "rollback@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "rollback is not possible in this state"
+      },
+      "live@before:2187537c52b8_add_table_for_ai_providers": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "apps.old.write is not configured"
+      },
+      "old@after:2187537c52b8_add_table_for_ai_providers": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@after:2187537c52b8_add_table_for_ai_providers": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "forward@after:2187537c52b8_add_table_for_ai_providers": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "apps.old.write is not configured"
+      },
+      "rollback@after:2187537c52b8_add_table_for_ai_providers": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "apps.new.write is not configured"
+      }
+    }
+  },
+  {
+    "id": "P2_v3.19.0_to_v3.25.0",
+    "verdict": "SAFE",
+    "exit": 0,
+    "first_failing_state": null,
+    "triage": {},
+    "phases": 1,
+    "checks": {
+      "old@baseline": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "new version is not deployed in this state"
+      },
+      "forward@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "old and new versions do not overlap in this state"
+      },
+      "rollback@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "rollback is not possible in this state"
+      },
+      "live@before:69e942bab3aa_add_tokens_valid_after_column_to_users": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "apps.old.write is not configured"
+      },
+      "old@after:69e942bab3aa_add_tokens_valid_after_column_to_users": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@after:69e942bab3aa_add_tokens_valid_after_column_to_users": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "forward@after:69e942bab3aa_add_tokens_valid_after_column_to_users": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "apps.old.write is not configured"
+      },
+      "rollback@after:69e942bab3aa_add_tokens_valid_after_column_to_users": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "apps.new.write is not configured"
+      }
+    }
+  },
+  {
+    "id": "P3_v3.25.0_to_v3.26.0",
+    "verdict": "SAFE",
+    "exit": 0,
+    "first_failing_state": null,
+    "triage": {},
+    "phases": 4,
+    "checks": {
+      "old@baseline": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "new version is not deployed in this state"
+      },
+      "forward@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "old and new versions do not overlap in this state"
+      },
+      "rollback@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "rollback is not possible in this state"
+      },
+      "live@before:b3f1c9a27d84_add_external_avatar_hash_to_users": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "apps.old.write is not configured"
+      },
+      "old@after:b3f1c9a27d84_add_external_avatar_hash_to_users": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@after:b3f1c9a27d84_add_external_avatar_hash_to_users": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "new version is not deployed in this state"
+      },
+      "forward@after:b3f1c9a27d84_add_external_avatar_hash_to_users": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "old and new versions do not overlap in this state"
+      },
+      "rollback@after:b3f1c9a27d84_add_external_avatar_hash_to_users": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "rollback is not possible in this state"
+      },
+      "live@before:f2191b69db2e_add_ingredient_substitutions": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "apps.old.write is not configured"
+      },
+      "old@after:f2191b69db2e_add_ingredient_substitutions": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@after:f2191b69db2e_add_ingredient_substitutions": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "new version is not deployed in this state"
+      },
+      "forward@after:f2191b69db2e_add_ingredient_substitutions": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "old and new versions do not overlap in this state"
+      },
+      "rollback@after:f2191b69db2e_add_ingredient_substitutions": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "rollback is not possible in this state"
+      },
+      "live@before:4b91d3a7c0e2_backfill_recipe_image_column_from_disk": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "apps.old.write is not configured"
+      },
+      "old@after:4b91d3a7c0e2_backfill_recipe_image_column_from_disk": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@after:4b91d3a7c0e2_backfill_recipe_image_column_from_disk": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "new version is not deployed in this state"
+      },
+      "forward@after:4b91d3a7c0e2_backfill_recipe_image_column_from_disk": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "old and new versions do not overlap in this state"
+      },
+      "rollback@after:4b91d3a7c0e2_backfill_recipe_image_column_from_disk": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "rollback is not possible in this state"
+      },
+      "live@before:3527efeeec34_add_recipe_note_ref_link": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "apps.old.write is not configured"
+      },
+      "old@after:3527efeeec34_add_recipe_note_ref_link": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@after:3527efeeec34_add_recipe_note_ref_link": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "forward@after:3527efeeec34_add_recipe_note_ref_link": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "apps.old.write is not configured"
+      },
+      "rollback@after:3527efeeec34_add_recipe_note_ref_link": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "apps.new.write is not configured"
+      }
+    }
+  },
+  {
+    "id": "MM1_drop_users_full_name",
+    "verdict": "UNSAFE",
+    "exit": 1,
+    "first_failing_state": "after:69e942bab3aa_add_tokens_valid_after_column_to_users",
+    "triage": {
+      "schema": 2
+    },
+    "phases": 1,
+    "checks": {
+      "old@baseline": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "new version is not deployed in this state"
+      },
+      "forward@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "old and new versions do not overlap in this state"
+      },
+      "rollback@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "rollback is not possible in this state"
+      },
+      "live@before:69e942bab3aa_add_tokens_valid_after_column_to_users": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "apps.old.write is not configured"
+      },
+      "old@after:69e942bab3aa_add_tokens_valid_after_column_to_users": {
+        "status": "fail",
+        "cause": "schema",
+        "required": true,
+        "detail": "old test exited with code 1"
+      },
+      "new@after:69e942bab3aa_add_tokens_valid_after_column_to_users": {
+        "status": "fail",
+        "cause": "schema",
+        "required": true,
+        "detail": "new test exited with code 1"
+      },
+      "forward@after:69e942bab3aa_add_tokens_valid_after_column_to_users": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "apps.old.write is not configured"
+      },
+      "rollback@after:69e942bab3aa_add_tokens_valid_after_column_to_users": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "apps.new.write is not configured"
+      }
+    }
+  },
+  {
+    "id": "MM2_rename_recipes_name",
+    "verdict": "UNSAFE",
+    "exit": 1,
+    "first_failing_state": "after:69e942bab3aa_add_tokens_valid_after_column_to_users",
+    "triage": {
+      "schema": 2
+    },
+    "phases": 1,
+    "checks": {
+      "old@baseline": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "new version is not deployed in this state"
+      },
+      "forward@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "old and new versions do not overlap in this state"
+      },
+      "rollback@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "rollback is not possible in this state"
+      },
+      "live@before:69e942bab3aa_add_tokens_valid_after_column_to_users": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "apps.old.write is not configured"
+      },
+      "old@after:69e942bab3aa_add_tokens_valid_after_column_to_users": {
+        "status": "fail",
+        "cause": "schema",
+        "required": true,
+        "detail": "old test exited with code 1"
+      },
+      "new@after:69e942bab3aa_add_tokens_valid_after_column_to_users": {
+        "status": "fail",
+        "cause": "schema",
+        "required": true,
+        "detail": "new test exited with code 1"
+      },
+      "forward@after:69e942bab3aa_add_tokens_valid_after_column_to_users": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "apps.old.write is not configured"
+      },
+      "rollback@after:69e942bab3aa_add_tokens_valid_after_column_to_users": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "apps.new.write is not configured"
+      }
+    }
+  },
+  {
+    "id": "MM3_not_null_no_default",
+    "verdict": "SAFE",
+    "exit": 0,
+    "first_failing_state": null,
+    "triage": {},
+    "phases": 1,
+    "checks": {
+      "old@baseline": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "new version is not deployed in this state"
+      },
+      "forward@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "old and new versions do not overlap in this state"
+      },
+      "rollback@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "rollback is not possible in this state"
+      },
+      "live@before:69e942bab3aa_add_tokens_valid_after_column_to_users": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "apps.old.write is not configured"
+      },
+      "old@after:69e942bab3aa_add_tokens_valid_after_column_to_users": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@after:69e942bab3aa_add_tokens_valid_after_column_to_users": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "forward@after:69e942bab3aa_add_tokens_valid_after_column_to_users": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "apps.old.write is not configured"
+      },
+      "rollback@after:69e942bab3aa_add_tokens_valid_after_column_to_users": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "apps.new.write is not configured"
+      }
+    }
+  },
+  {
+    "id": "MM4_not_null_server_default",
+    "verdict": "SAFE",
+    "exit": 0,
+    "first_failing_state": null,
+    "triage": {},
+    "phases": 1,
+    "checks": {
+      "old@baseline": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "new version is not deployed in this state"
+      },
+      "forward@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "old and new versions do not overlap in this state"
+      },
+      "rollback@baseline": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "rollback is not possible in this state"
+      },
+      "live@before:69e942bab3aa_add_tokens_valid_after_column_to_users": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "apps.old.write is not configured"
+      },
+      "old@after:69e942bab3aa_add_tokens_valid_after_column_to_users": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "new@after:69e942bab3aa_add_tokens_valid_after_column_to_users": {
+        "status": "pass",
+        "cause": "",
+        "required": true,
+        "detail": ""
+      },
+      "forward@after:69e942bab3aa_add_tokens_valid_after_column_to_users": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "apps.old.write is not configured"
+      },
+      "rollback@after:69e942bab3aa_add_tokens_valid_after_column_to_users": {
+        "status": "skipped",
+        "cause": "",
+        "required": false,
+        "detail": "apps.new.write is not configured"
+      }
+    }
+  }
+]
