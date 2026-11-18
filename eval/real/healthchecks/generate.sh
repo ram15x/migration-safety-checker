@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Generate configs for the three healthchecks release pairs with `msc init-django`.
+# Generate configs for the three healthchecks release pairs with `migration-safety-checker init-django`.
 # usage: HC_APPS=/some/dir ./generate.sh <out-dir>     (run setup.sh first)
 set -euo pipefail
 : "${HC_APPS:=/tmp/apps}"
 out="${1:?usage: generate.sh <out-dir>}"
 here="$(cd "$(dirname "$0")" && pwd)"
 gen() {  # name old new tests seed write read
-  msc init-django --settings hc.settings --env SECRET_KEY=msc-test \
+  migration-safety-checker init-django --settings hc.settings --env SECRET_KEY=test-key \
     --old "$HC_APPS/wt/$2" --old-python "$HC_APPS/venv-$2/bin/python" \
     --new "$HC_APPS/wt/$3" --new-python "$HC_APPS/venv-$3/bin/python" \
     --tests "$4" --seed "$here/$5" --write "$here/$6" --read "$here/$7" --out "$out/$1"

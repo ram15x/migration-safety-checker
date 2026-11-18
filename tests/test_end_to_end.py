@@ -1,4 +1,4 @@
-"""End-to-end tests. They need a reachable Postgres server in MSC_ADMIN_URL."""
+"""End-to-end tests. They need a reachable Postgres server in MIGRATION_SAFETY_CHECKER_ADMIN_URL."""
 
 import os
 from pathlib import Path
@@ -12,7 +12,7 @@ from migration_safety_checker.runner import run
 EXAMPLES = Path(__file__).resolve().parent.parent / "examples" / "rename-column"
 
 pytestmark = pytest.mark.skipif(
-    not os.environ.get("MSC_ADMIN_URL"), reason="MSC_ADMIN_URL is not set"
+    not os.environ.get("MIGRATION_SAFETY_CHECKER_ADMIN_URL"), reason="MIGRATION_SAFETY_CHECKER_ADMIN_URL is not set"
 )
 
 
@@ -43,8 +43,8 @@ def test_scratch_databases_are_cleaned_up():
     import psycopg
 
     run(load(EXAMPLES / "safe.yml"))
-    with psycopg.connect(os.environ["MSC_ADMIN_URL"], autocommit=True) as conn:
+    with psycopg.connect(os.environ["MIGRATION_SAFETY_CHECKER_ADMIN_URL"], autocommit=True) as conn:
         leftovers = conn.execute(
-            "SELECT datname FROM pg_database WHERE datname LIKE 'msc\\_%'"
+            "SELECT datname FROM pg_database WHERE datname LIKE 'migration_safety_checker\\_%'"
         ).fetchall()
     assert leftovers == []

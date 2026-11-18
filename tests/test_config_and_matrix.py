@@ -10,7 +10,7 @@ EXAMPLES = Path(__file__).resolve().parent.parent / "examples" / "rename-column"
 
 @pytest.fixture(autouse=True)
 def admin_url(monkeypatch):
-    monkeypatch.setenv("MSC_ADMIN_URL", "postgresql://localhost/postgres")
+    monkeypatch.setenv("MIGRATION_SAFETY_CHECKER_ADMIN_URL", "postgresql://localhost/postgres")
 
 
 def test_loads_example_config():
@@ -47,7 +47,7 @@ def test_partial_state_is_inserted_before_its_phase(tmp_path):
     (tmp_path / "base.sql").write_text("select 1;")
     (tmp_path / "p.sql").write_text("select 1;")
     (tmp_path / "half.sql").write_text("select 1;")
-    (tmp_path / "msc.yml").write_text(
+    (tmp_path / "migration-safety-checker.yml").write_text(
         """
 baseline: {sql: [base.sql]}
 phases:
@@ -59,40 +59,40 @@ apps:
   new: {test: "true"}
 """
     )
-    names = [s.name for s in build_states(load(tmp_path / "msc.yml"))]
+    names = [s.name for s in build_states(load(tmp_path / "migration-safety-checker.yml"))]
     assert names == ["baseline", "partial:backfill", "after:backfill"]
 
 
 def test_missing_baseline_is_an_error(tmp_path):
-    (tmp_path / "msc.yml").write_text("phases: [{name: a, sql: [x.sql]}]\napps: {old: {test: t}, new: {test: t}}\n")
+    (tmp_path / "migration-safety-checker.yml").write_text("phases: [{name: a, sql: [x.sql]}]\napps: {old: {test: t}, new: {test: t}}\n")
     with pytest.raises(ConfigError, match="baseline"):
-        load(tmp_path / "msc.yml")
+        load(tmp_path / "migration-safety-checker.yml")
 
 
 def test_missing_sql_file_is_reported(tmp_path):
     (tmp_path / "base.sql").write_text("select 1;")
-    (tmp_path / "msc.yml").write_text(
+    (tmp_path / "migration-safety-checker.yml").write_text(
         "baseline: {sql: [base.sql]}\nphases: [{name: a, sql: [nope.sql]}]\napps: {old: {test: t}, new: {test: t}}\n"
     )
     with pytest.raises(ConfigError, match="nope.sql"):
-        load(tmp_path / "msc.yml")
+        load(tmp_path / "migration-safety-checker.yml")
 
 
 def test_unset_env_var_without_default_is_an_error(tmp_path, monkeypatch):
-    monkeypatch.delenv("MSC_ADMIN_URL")
-    with pytest.raises(ConfigError, match="MSC_ADMIN_URL"):
+    monkeypatch.delenv("MIGRATION_SAFETY_CHECKER_ADMIN_URL")
+    with pytest.raises(ConfigError, match="MIGRATION_SAFETY_CHECKER_ADMIN_URL"):
         load(EXAMPLES / "safe.yml")
 
 
 def test_duplicate_phase_names_rejected(tmp_path):
     (tmp_path / "base.sql").write_text("select 1;")
     (tmp_path / "p.sql").write_text("select 1;")
-    (tmp_path / "msc.yml").write_text(
+    (tmp_path / "migration-safety-checker.yml").write_text(
         "baseline: {sql: [base.sql]}\nphases: [{name: a, sql: [p.sql]}, {name: a, sql: [p.sql]}]\n"
         "apps: {old: {test: t}, new: {test: t}}\n"
     )
     with pytest.raises(ConfigError, match="duplicate"):
-        load(tmp_path / "msc.yml")
+        load(tmp_path / "migration-safety-checker.yml")
 
 
 def test_forward_check_needs_overlap_and_an_old_write_command():

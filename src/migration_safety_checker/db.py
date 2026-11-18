@@ -56,8 +56,8 @@ class Database:
     # -- lifecycle -------------------------------------------------------
     def new_name(self, label: str) -> str:
         self._counter += 1
-        safe = "".join(c if c.isalnum() else "_" for c in label)[:20]
-        return f"msc_{self._run_id}_{self._counter}_{safe}".lower()
+        safe = "".join(c if c.isalnum() else "_" for c in label)[:12]
+        return f"migration_safety_checker_{self._run_id}_{self._counter}_{safe}".lower()
 
     def create(self, name: str, template: str | None = None) -> None:
         if template:

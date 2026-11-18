@@ -12,7 +12,7 @@ Each config takes roughly 15 to 50 seconds on a 2-core cloud machine; `--jobs 4`
 
 ## Generated configs
 
-The three hand-written configs above were the first pass. `msc init-django` now builds the same thing from two checkouts: it asks each release's own Django for its migration graph, turns every migration only the new release has into a phase, and writes a settings overlay so the suites run against the prepared database. `generate.sh` runs it for all three pairs.
+The three hand-written configs above were the first pass. `migration-safety-checker init-django` now builds the same thing from two checkouts: it asks each release's own Django for its migration graph, turns every migration only the new release has into a phase, and writes a settings overlay so the suites run against the prepared database. `generate.sh` runs it for all three pairs.
 
 Run from generated configs, the control is SAFE and v3.9 to v3.10 is UNSAFE with the same failures (4 of 13 required checks; the hand-written config had two extra checks for a half-finished backfill, which the adapter leaves for you to add as `partial_sql`). The generated v3.4 to v3.5 config is UNSAFE with 9 of 17 failed, because it found two more migrations in that release than I had listed by hand, 0110 and 0111. All 9 failures trace to the dropped `body` column from 0109 and repeat in the later states, so 0110 and 0111 add no new cause. The matrix does not say whether they would be safe on their own.
 
@@ -47,7 +47,7 @@ Still open: a check that fails because of a harness problem looks the same as on
 ## Reproduce
 
 ```bash
-export MSC_ADMIN_URL=postgresql://postgres@localhost:5432/postgres
+export MIGRATION_SAFETY_CHECKER_ADMIN_URL=postgresql://postgres@localhost:5432/postgres
 eval/real/healthchecks/setup.sh            # checkouts and virtualenvs in $HC_APPS (default /tmp/apps)
-msc check eval/real/healthchecks/v3.4-to-v3.5.yml --out report/
+migration-safety-checker check eval/real/healthchecks/v3.4-to-v3.5.yml --out report/
 ```

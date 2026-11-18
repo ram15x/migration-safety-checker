@@ -358,7 +358,7 @@ def generate() -> None:
             '  old: { test: "python ../../simapp.py old.json test", write: "python ../../simapp.py old.json write" }',
             '  new: { test: "python ../../simapp.py new.json test", write: "python ../../simapp.py new.json write" }',
         ]
-        (d / "msc.yml").write_text("\n".join(cfg) + "\n")
+        (d / "migration-safety-checker.yml").write_text("\n".join(cfg) + "\n")
     print(f"generated {len(SCENARIOS)} scenarios in {OUT}")
 
 

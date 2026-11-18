@@ -38,7 +38,7 @@ def version() -> None:
 
 
 @app.command()
-def plan(config: Path = typer.Argument(..., help="Path to msc.yml")) -> None:
+def plan(config: Path = typer.Argument(..., help="Path to migration-safety-checker.yml")) -> None:
     """Show which checks would run, without running anything."""
     cfg = _load(config)
     table = Table(title=f"Plan for {cfg.name}")
@@ -54,7 +54,7 @@ def init_django(
     old: Path = typer.Option(..., "--old", help="Checkout of the release still serving traffic"),
     new: Path = typer.Option(..., "--new", help="Checkout of the release being rolled out"),
     settings: str = typer.Option(..., "--settings", help="Django settings module, e.g. mysite.settings"),
-    out: Path = typer.Option(Path("msc"), "--out", help="Directory for the generated files"),
+    out: Path = typer.Option(Path("checks"), "--out", help="Directory for the generated files"),
     old_python: str = typer.Option(sys.executable, "--old-python", help="Interpreter of the old release's environment"),
     new_python: str = typer.Option(sys.executable, "--new-python", help="Interpreter of the new release's environment"),
     tests: str = typer.Option("", "--tests", help="Test labels to run, space separated (default: whole suite)"),
@@ -88,12 +88,12 @@ def init_django(
     for m in phases:
         extra = f"  ({'; '.join(m.notes)})" if m.notes else ""
         console.print(f"  {m.app}.{m.name}{extra}")
-    console.print(f"next: msc check {path}")
+    console.print(f"next: migration-safety-checker check {path}")
 
 
 @app.command()
 def check(
-    config: Path = typer.Argument(..., help="Path to msc.yml"),
+    config: Path = typer.Argument(..., help="Path to migration-safety-checker.yml"),
     out: Path = typer.Option(None, "--out", help="Directory for report files"),
     jobs: int = typer.Option(1, "--jobs", "-j", min=1, max=32, help="Checks to run at once"),
     timeout: int = typer.Option(None, "--timeout", min=1, help="Seconds allowed per command (overrides the config)"),

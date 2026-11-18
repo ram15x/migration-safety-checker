@@ -54,7 +54,7 @@ def test_generate_writes_a_loadable_config(tmp_path, monkeypatch):
     text = path.read_text()
     assert "RemoveField: removes a column" in text
     assert "add partial_sql" in text
-    overlay = (tmp_path / "out" / "msc_settings.py").read_text()
+    overlay = (tmp_path / "out" / "migration_safety_checker_settings.py").read_text()
     assert "from proj.settings import *" in overlay and "database_from_env" in overlay
 
 

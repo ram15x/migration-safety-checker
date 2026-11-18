@@ -1,7 +1,7 @@
 """Test runner used by generated Django settings.
 
 It combines ``SchemaCloneMixin`` with the project's own ``TEST_RUNNER``, which
-the generated settings module passes in ``MSC_BASE_RUNNER``.
+the generated settings module passes in ``MIGRATION_SAFETY_CHECKER_BASE_RUNNER``.
 """
 
 import os
@@ -10,7 +10,7 @@ from django.utils.module_loading import import_string
 
 from .django_support import SchemaCloneMixin
 
-_Base = import_string(os.environ.get("MSC_BASE_RUNNER") or "django.test.runner.DiscoverRunner")
+_Base = import_string(os.environ.get("MIGRATION_SAFETY_CHECKER_BASE_RUNNER") or "django.test.runner.DiscoverRunner")
 
 
 class Runner(SchemaCloneMixin, _Base):  # type: ignore[misc,valid-type]

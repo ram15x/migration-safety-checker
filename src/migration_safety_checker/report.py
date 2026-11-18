@@ -86,7 +86,7 @@ def to_json(report: Report) -> str:
 def to_junit(report: Report) -> str:
     suite = ET.Element(
         "testsuite",
-        name=f"msc:{report.name}",
+        name=f"migration-safety-checker:{report.name}",
         tests=str(len(report.results)),
         failures=str(len(report.failed)),
         skipped=str(sum(1 for r in report.results if r.status == SKIPPED)),

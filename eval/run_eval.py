@@ -1,7 +1,7 @@
 """Runs every scenario through Migration Safety Checker and the baselines and prints a confusion table.
 
 Predictions ("unsafe" = the tool says the migration should be blocked):
-  msc : any required check in the matrix fails
+  migration-safety-checker : any required check in the matrix fails
   ci-new-final  : the new version's tests fail on the final schema (what ordinary CI does)
   ci-old-final  : the old version's tests fail on the final schema
   squawk-default: Squawk reports any finding on the migration files (default rules)
@@ -39,12 +39,12 @@ def main() -> int:
     rows = []
     for d in sorted((HERE / "scenarios").iterdir()):
         label = json.loads((d / "label.json").read_text())["label"]
-        cfg = cfgmod.load(d / "msc.yml")
+        cfg = cfgmod.load(d / "migration-safety-checker.yml")
         rep = runner.run(cfg)
         final = f"after:{cfg.phases[-1].name}"
         by = {(r.check.kind, r.check.state.name): r.status for r in rep.results}
         pred = {
-            "msc": not rep.safe,
+            "migration-safety-checker": not rep.safe,
             "ci-new-final": by.get(("new", final)) == runner.FAIL,
             "ci-old-final": by.get(("old", final)) == runner.FAIL,
             "squawk-default": squawk_unsafe(d, cfg),
@@ -59,7 +59,8 @@ def main() -> int:
     if not SQUAWK:
         print("squawk not found (set SQUAWK or put it on PATH): its rows are omitted\n")
     tools = list(rows[0][2])
-    print(f"{'tool':15s} TP FP FN TN  precision recall")
+    w = max(len(t) for t in tools)
+    print(f"{'tool':{w}s} TP FP FN TN  precision recall")
     out = {}
     for t in tools:
         tp = sum(1 for _, l, p, _ in rows if l == "unsafe" and p[t])
@@ -68,7 +69,7 @@ def main() -> int:
         tn = sum(1 for _, l, p, _ in rows if l == "safe" and not p[t])
         prec = tp / (tp + fp) if tp + fp else float("nan")
         rec = tp / (tp + fn) if tp + fn else float("nan")
-        print(f"{t:15s} {tp:2d} {fp:2d} {fn:2d} {tn:2d}  {prec:9.2f} {rec:6.2f}")
+        print(f"{t:{w}s} {tp:2d} {fp:2d} {fn:2d} {tn:2d}  {prec:9.2f} {rec:6.2f}")
         out[t] = dict(tp=tp, fp=fp, fn=fn, tn=tn)
     (HERE / "out").mkdir(exist_ok=True)
     (HERE / "out" / "results.json").write_text(json.dumps(

@@ -12,7 +12,7 @@ from migration_safety_checker.report import to_json, to_markdown
 from migration_safety_checker.runner import _run_command, run
 
 EXAMPLES = Path(__file__).resolve().parent.parent / "examples" / "rename-column"
-needs_db = pytest.mark.skipif(not os.environ.get("MSC_ADMIN_URL"), reason="MSC_ADMIN_URL is not set")
+needs_db = pytest.mark.skipif(not os.environ.get("MIGRATION_SAFETY_CHECKER_ADMIN_URL"), reason="MIGRATION_SAFETY_CHECKER_ADMIN_URL is not set")
 
 
 def test_timeout_kills_the_whole_process_group(tmp_path):
@@ -56,11 +56,11 @@ def test_unreachable_database_gives_a_clear_error():
 def test_missing_write_command_is_reported_as_not_run(tmp_path):
     (tmp_path / "s.sql").write_text("CREATE TABLE t(id int);")
     (tmp_path / "p.sql").write_text("SELECT 1;")
-    (tmp_path / "msc.yml").write_text(
+    (tmp_path / "migration-safety-checker.yml").write_text(
         "baseline: {sql: [s.sql]}\nphases: [{name: p, sql: [p.sql]}]\n"
         "apps: {old: {test: 'true'}, new: {test: 'true'}}\n"
     )
-    report = run(load(tmp_path / "msc.yml"))
+    report = run(load(tmp_path / "migration-safety-checker.yml"))
     assert report.safe
     assert {r.check.id for r in report.unconfigured} == {"forward@after:p", "rollback@after:p"}
     assert "Not run, because the config has no command" in to_markdown(report)
