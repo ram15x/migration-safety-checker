@@ -1,0 +1,108 @@
+name: migration-safety-checker
+description: Check that the old and new application versions both work against every database state of a rolling deploy.
+author: ram15x
+branding:
+  icon: shield
+  color: blue
+
+inputs:
+  config:
+    description: Path to migration-safety-checker.yml, relative to the workspace.
+    required: true
+  admin-url:
+    description: >
+      PostgreSQL URL of a user that may create and drop databases. Leave empty to use the
+      MIGRATION_SAFETY_CHECKER_ADMIN_URL environment variable of the job.
+    required: false
+    default: ""
+  expect:
+    description: "Verdict that counts as success: safe (default) or unsafe. Use unsafe to test that a known-bad change is caught."
+    required: false
+    default: safe
+  jobs:
+    description: Checks to run at once.
+    required: false
+    default: "1"
+  extra-args:
+    description: Further arguments for `migration-safety-checker check`, for example `--isolate --strict`.
+    required: false
+    default: ""
+  python-version:
+    description: Python version to install the tool with.
+    required: false
+    default: "3.12"
+  report-dir:
+    description: Directory the reports are written to.
+    required: false
+    default: migration-safety-report
+  upload:
+    description: Upload report.md and junit.xml as a workflow artifact (true or false).
+    required: false
+    default: "true"
+  artifact-name:
+    description: Name of the uploaded artifact. Use a different name for each use of the action in one workflow run.
+    required: false
+    default: migration-safety-report
+
+outputs:
+  verdict:
+    description: SAFE, UNSAFE or INCONCLUSIVE (also used for a setup error).
+    value: ${{ steps.check.outputs.verdict }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v6
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install migration-safety-checker
+      shell: bash
+      run: python -m pip install --quiet "${{ github.action_path }}"
+
+    - name: Check the rollout
+      id: check
+      shell: bash
+      env:
+        CONFIG: ${{ inputs.config }}
+        ADMIN_URL: ${{ inputs.admin-url }}
+        EXPECT: ${{ inputs.expect }}
+        JOBS: ${{ inputs.jobs }}
+        EXTRA_ARGS: ${{ inputs.extra-args }}
+        REPORT_DIR: ${{ inputs.report-dir }}
+      run: |
+        if [ "$EXPECT" != "safe" ] && [ "$EXPECT" != "unsafe" ]; then
+          echo "::error::expect must be 'safe' or 'unsafe', got '$EXPECT'"
+          exit 2
+        fi
+        if [ -n "$ADMIN_URL" ]; then
+          export MIGRATION_SAFETY_CHECKER_ADMIN_URL="$ADMIN_URL"
+        fi
+        set +e
+        # EXTRA_ARGS is deliberately unquoted so it splits into separate arguments
+        migration-safety-checker check "$CONFIG" --out "$REPORT_DIR" --jobs "$JOBS" $EXTRA_ARGS
+        code=$?
+        set -e
+        case "$code" in
+          0) verdict=SAFE ;;
+          1) verdict=UNSAFE ;;
+          *) verdict=INCONCLUSIVE ;;
+        esac
+        echo "verdict=$verdict" >> "$GITHUB_OUTPUT"
+        if [ -f "$REPORT_DIR/report.md" ]; then
+          cat "$REPORT_DIR/report.md" >> "$GITHUB_STEP_SUMMARY"
+        fi
+        if [ "$EXPECT" = "safe" ] && [ "$code" -eq 0 ]; then exit 0; fi
+        if [ "$EXPECT" = "unsafe" ] && [ "$code" -eq 1 ]; then exit 0; fi
+        echo "::error::verdict was $verdict (exit $code), expected $EXPECT"
+        exit 1
+
+    - name: Upload reports
+      if: ${{ always() && inputs.upload == 'true' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: |
+          ${{ inputs.report-dir }}/report.md
+          ${{ inputs.report-dir }}/junit.xml
+        if-no-files-found: warn

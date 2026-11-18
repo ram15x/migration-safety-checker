@@ -25,3 +25,47 @@ jobs:
           npm install -g squawk-cli@2.73.0
           echo "SQUAWK=$(which squawk)" >> "$GITHUB_ENV"
       - run: python eval/scenarios.py && python eval/run_eval.py
+
+  action:
+    # Tests the reusable action (action.yml) against the bundled example: once expecting SAFE,
+    # once expecting UNSAFE, and once checking that a wrong expectation fails the step.
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    env:
+      MIGRATION_SAFETY_CHECKER_ADMIN_URL: postgresql://postgres:postgres@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@v5
+      - name: Safe rollout, expecting SAFE
+        id: safe
+        uses: ./
+        with:
+          config: examples/rename-column/safe.yml
+          artifact-name: report-safe
+      - name: Unsafe rollout, expecting UNSAFE
+        id: unsafe
+        uses: ./
+        with:
+          config: examples/rename-column/unsafe.yml
+          expect: unsafe
+          artifact-name: report-unsafe
+      - name: Unsafe rollout, expecting SAFE (the step must fail)
+        id: wrong
+        continue-on-error: true
+        uses: ./
+        with:
+          config: examples/rename-column/unsafe.yml
+          report-dir: report-wrong
+          upload: "false"
+      - name: Check the outcomes
+        run: |
+          test "${{ steps.safe.outputs.verdict }}" = SAFE
+          test "${{ steps.unsafe.outputs.verdict }}" = UNSAFE
+          test "${{ steps.wrong.outcome }}" = failure
