@@ -1,0 +1,15 @@
+name: rename-column-safe
+baseline:
+  sql: [schema.sql]
+phases:
+  - name: expand
+    sql: [safe/01_expand.sql]
+  - name: contract
+    sql: [safe/02_contract.sql]
+    old_may_run: false   # contract runs only after every old instance is retired
+apps:
+  old: { test: "python v1.py test", write: "python v1.py write" }
+  new: { test: "python v2.py test", write: "python v2.py write" }
+invariants:
+  - name: emails are unique
+    sql: "SELECT email FROM users GROUP BY email HAVING count(*) > 1"

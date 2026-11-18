@@ -1,0 +1,12 @@
+name: rename-column-unsafe
+baseline:
+  sql: [schema.sql]
+phases:
+  - name: rename
+    sql: [unsafe/01_rename.sql]
+apps:
+  old: { test: "python v1.py test", write: "python v1.py write" }
+  new: { test: "python v2.py test", write: "python v2.py write" }
+invariants:
+  - name: emails are unique
+    sql: "SELECT email FROM users GROUP BY email HAVING count(*) > 1"
