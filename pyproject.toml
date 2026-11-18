@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "migration-safety-checker"
-version = "0.1.0"
+version = "0.2.0"
 description = "Test that old and new application versions both work against every database state of a rolling deploy."
 readme = "README.md"
 requires-python = ">=3.10"

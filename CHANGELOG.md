@@ -1,11 +1,18 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 (2026-11-18)
 
-- The template database is created as UTF8 when the cluster's default encoding is SQL_ASCII; on such a cluster psycopg returned bytes and the Alembic example tests failed inside SQLAlchemy (`cannot use a string pattern on a bytes-like object`).
-- Reusable composite GitHub Action (`action.yml`): installs the tool, runs the check, fails unless the verdict matches `expect` (safe or unsafe), uploads `report.md` and `junit.xml`. Tested in this repository's CI.
+### Added
+- `init-alembic`: generates a configuration from the Alembic revisions the new release adds, with notes on risky operations read from each revision's `upgrade()`. Options: `--migrate-first` (require the new release only after the last revision), `--url-part` (export host, port, user, password or database name for applications that assemble their own URL), `--url-env`, `--driver`, and a `{python}` placeholder for each release's interpreter. Every command runs through a generated wrapper, so application commands see the SQLAlchemy URL. Two bundled examples in `examples/alembic`: a NOT NULL column without a default is caught, a nullable one passes.
+- Reusable composite GitHub Action (`action.yml`): installs the tool from the pinned ref, runs the check, fails unless the verdict matches `expect` (safe or unsafe), uploads `report.md` and `junit.xml`. Tested in this repository's CI against the bundled example.
 - Evidence on two more real applications: full-stack-fastapi-template (two release pairs, nine mutants) and Mealie (three release pairs, four mutants); see `eval/real`.
-- `init-alembic`: generate a configuration from the Alembic revisions the new release adds, with notes on risky operations read from each revision's `upgrade()`. Two bundled examples (`examples/alembic`: NOT NULL column without a default is caught, a nullable one passes). Application commands run through the same wrapper, so they see the SQLAlchemy URL; `--url-part` exports host, port, user, password or database name for applications that assemble their own URL.
+
+### Fixed
+- The template database is created as UTF8 when the cluster's default encoding is SQL_ASCII. On such a cluster psycopg returned bytes and the Alembic example tests failed inside SQLAlchemy (`cannot use a string pattern on a bytes-like object`).
+- Committed result files no longer contain absolute paths of the machine they were produced on, and the evaluation runners scrub them.
+
+### Known limits
+- Same as 0.1.0, plus: the Action has only run in this repository's CI; the Mealie run used a read-only smoke test, not the application's suite; the three Mealie release pairs are all SAFE and say nothing about whether the tool finds hazards there.
 
 ## 0.1.0 (2026-11-18)
 

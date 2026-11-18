@@ -150,15 +150,14 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       # set up whatever your checks and both app versions need here (dependencies, the old release checkout, ...)
-      - uses: ram15x/migration-safety-checker@main    # pin a tag once one includes action.yml
+      - uses: ram15x/migration-safety-checker@v0.2.0
         with:
           config: checks/migration-safety-checker.yml
 ```
 
 Inputs: `config` (required), `admin-url`, `expect` (`safe` or `unsafe`), `jobs`, `extra-args` (for example `--isolate --strict`), `python-version`, `report-dir`, `upload`, `artifact-name`. Output: `verdict` (SAFE, UNSAFE or INCONCLUSIVE, the last also for a setup error). Use a different `artifact-name` for each use in one workflow run.
 
-This repository's own CI runs the action three times against the bundled example (`examples/rename-column`): once expecting SAFE, once expecting UNSAFE, and once with a wrong expectation that must fail the step. The action file has not been run in anyone else's repository. The v0.1.0 tag predates `action.yml` and `init-alembic`, so `uses:` must point at `main` (or a later tag) for now.
-
+This repository's own CI runs the action three times against the bundled example (`examples/rename-column`): once expecting SAFE, once expecting UNSAFE, and once with a wrong expectation that must fail the step. The action file has not been run in anyone else's repository. 
 ## Results on a real application
 
 [healthchecks](https://github.com/healthchecks/healthchecks) (Django, PostgreSQL, 120+ migrations): three release pairs, real migrations replayed as phases, the releases' own code and test modules as the apps.
@@ -256,13 +255,13 @@ Python 3.10+, PostgreSQL (psycopg 3), Typer, Rich, PyYAML, pytest. The adapters 
 
 ```bash
 python -m venv .venv && . .venv/bin/activate
-pip install "git+https://github.com/ram15x/migration-safety-checker.git@v0.1.0"
+pip install "git+https://github.com/ram15x/migration-safety-checker.git@v0.2.0"
 git clone https://github.com/ram15x/migration-safety-checker && cd migration-safety-checker    # for the bundled examples
 export MIGRATION_SAFETY_CHECKER_ADMIN_URL=postgresql://postgres:postgres@localhost:5432/postgres
 migration-safety-checker check examples/rename-column/safe.yml
 ```
 
-The example commands call `python`, so run them with the virtual environment active. Installed from GitHub in a clean virtual environment on Python 3.13, and from a local checkout with the full test suite on Python 3.10. Not published on PyPI. The v0.1.0 tag does not include `init-alembic` or the action; install from `main` (`pip install "git+https://github.com/ram15x/migration-safety-checker.git"`) to get them.
+The example commands call `python`, so run them with the virtual environment active. Installed from GitHub in a clean virtual environment on Python 3.13, and from a local checkout with the full test suite on Python 3.10. Not published on PyPI.
 
 ## Build and run
 
