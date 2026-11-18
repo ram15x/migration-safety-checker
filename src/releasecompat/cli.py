@@ -95,9 +95,14 @@ def init_django(
 def check(
     config: Path = typer.Argument(..., help="Path to releasecompat.yml"),
     out: Path = typer.Option(None, "--out", help="Directory for report files"),
+    jobs: int = typer.Option(1, "--jobs", "-j", min=1, max=32, help="Checks to run at once"),
+    timeout: int = typer.Option(None, "--timeout", min=1, help="Seconds allowed per command (overrides the config)"),
+    strict: bool = typer.Option(False, "--strict", help="Exit 2 if any check was not run for lack of a configured command"),
 ) -> None:
-    """Run every required check. Exits 1 if the release is unsafe."""
+    """Run every required check. Exits 1 if the release is unsafe, 2 on a setup error."""
     cfg = _load(config)
+    if timeout:
+        cfg.timeout = timeout
 
     def show(result) -> None:
         if result.status == SKIPPED:
@@ -106,7 +111,10 @@ def check(
         console.print(f"{mark}  {result.check.id}  {result.detail}")
 
     try:
-        report = run(cfg, on_result=show)
+        report = run(cfg, on_result=show, jobs=jobs)
+    except KeyboardInterrupt:
+        console.print("[red]interrupted[/red]; scratch databases were removed")
+        raise typer.Exit(code=130)
     except RuntimeError as exc:
         console.print(f"[red]error:[/red] {exc}")
         raise typer.Exit(code=2)
@@ -120,6 +128,13 @@ def check(
 
     status = "[green]SAFE[/green]" if report.safe else "[red]UNSAFE[/red]"
     console.print(f"\nverdict: {status} ({len(report.failed)} of {len(report.required)} required checks failed)")
+    if report.first_failing_state:
+        console.print(f"first failing state: {report.first_failing_state}")
+    if report.unconfigured:
+        ids = ", ".join(r.check.id for r in report.unconfigured)
+        console.print(f"[yellow]warning:[/yellow] {len(report.unconfigured)} check(s) not run because no command is configured: {ids}")
+        if strict:
+            raise typer.Exit(code=2)
     raise typer.Exit(code=0 if report.safe else 1)
 
 

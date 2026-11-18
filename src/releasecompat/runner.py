@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 import os
+import signal
 import subprocess
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Callable
 
 import psycopg
+
+from psycopg.conninfo import conninfo_to_dict, make_conninfo
 
 from .config import Config
 from .db import Database
@@ -44,6 +50,16 @@ class Report:
         return [r for r in self.results if r.check.required]
 
     @property
+    def unconfigured(self) -> list[CheckResult]:
+        """Checks that did not run because a command is missing from the config."""
+        return [r for r in self.results if r.status == SKIPPED and "not configured" in r.detail]
+
+    @property
+    def first_failing_state(self) -> str | None:
+        """The earliest database state in which any check failed."""
+        return self.failed[0].check.state.name if self.failed else None
+
+    @property
     def safe(self) -> bool:
         return not self.failed
 
@@ -57,22 +73,45 @@ def _trim(text: str) -> str:
     return text if len(text) <= LOG_LIMIT else text[:LOG_LIMIT] + "\n... (truncated)"
 
 
+def _run_command(command: str, cwd: Path, env: dict[str, str], timeout: int) -> tuple[int, str]:
+    """Run a shell command in its own process group; kill the whole group on timeout.
+
+    Killing only the shell would leave its children running and holding the output
+    pipes, so a hung test suite could stall the run past the timeout.
+    """
+    if not command.strip():
+        return 2, "no command configured"
+    proc = subprocess.Popen(
+        command, shell=True, cwd=cwd, env=env, text=True, start_new_session=True,
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+    )
+    try:
+        out, _ = proc.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        _kill_group(proc)
+        out, _ = proc.communicate()
+        return 124, _trim((out or "") + f"\ntimed out after {timeout}s")
+    except BaseException:
+        _kill_group(proc)
+        raise
+    code = proc.returncode
+    out = out or ""
+    if code == 127 and "not found" in out:
+        out += "\n(exit 127: a program in this command is not installed or not on PATH)"
+    return code, _trim(out)
+
+
+def _kill_group(proc: "subprocess.Popen[str]") -> None:
+    try:
+        os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+    except (ProcessLookupError, PermissionError):
+        proc.kill()
+
+
 def _shell(cfg: Config, command: str, env_url: str, check: Check, app: str) -> tuple[int, str]:
     env = dict(os.environ)
     env.update({"DATABASE_URL": env_url, "RC_STATE": check.state.name, "RC_APP": app})
-    try:
-        proc = subprocess.run(
-            command,
-            shell=True,
-            cwd=cfg.root,
-            env=env,
-            capture_output=True,
-            text=True,
-            timeout=cfg.timeout,
-        )
-    except subprocess.TimeoutExpired:
-        return 124, f"timed out after {cfg.timeout}s"
-    return proc.returncode, _trim(proc.stdout + ("\n" + proc.stderr if proc.stderr else ""))
+    return _run_command(command, cfg.root, env, cfg.timeout)
 
 
 def _apply(
@@ -84,23 +123,21 @@ def _apply(
     env["DATABASE_URL"] = db.url(dbname)
     env["RC_APP"] = "migrate"
     for command in commands:
-        try:
-            proc = subprocess.run(
-                command, shell=True, cwd=cfg.root, env=env,
-                capture_output=True, text=True, timeout=cfg.timeout,
-            )
-        except subprocess.TimeoutExpired as exc:
-            raise RuntimeError(f"timed out after {cfg.timeout}s: {command}") from exc
-        if proc.returncode != 0:
-            raise RuntimeError(
-                f"exit {proc.returncode}: {command}\n{_trim(proc.stdout + proc.stderr)}"
-            )
+        code, out = _run_command(command, cfg.root, env, cfg.timeout)
+        if code != 0:
+            raise RuntimeError(f"exit {code}: {command}\n{out}")
 
 
 def _execute(cfg: Config, db: Database, template: str, check: Check) -> CheckResult:
     name = db.new_name(check.id)
     started = time.monotonic()
-    db.create(name, template=template)
+    try:
+        db.create(name, template=template)
+    except psycopg.Error as exc:
+        return CheckResult(
+            check, FAIL, f"could not create a scratch database: {str(exc).splitlines()[0]}",
+            duration=time.monotonic() - started,
+        )
     try:
         try:
             for phase in check.state.applied:
@@ -166,28 +203,61 @@ def _execute(cfg: Config, db: Database, template: str, check: Check) -> CheckRes
         db.drop(name)
 
 
+def _describe(admin_url: str) -> str:
+    try:
+        parts = conninfo_to_dict(make_conninfo(admin_url))
+    except psycopg.Error:
+        return "the configured database"
+    host = parts.get("host") or "local socket"
+    port = f":{parts['port']}" if parts.get("port") else ""
+    return f"{parts.get('user', '')}@{host}{port}".lstrip("@")
+
+
 def run(
     cfg: Config,
     on_result: Callable[[CheckResult], None] | None = None,
+    jobs: int = 1,
 ) -> Report:
+    """Run every check. With ``jobs`` > 1, checks run concurrently, each in its own database."""
     db = Database(cfg.admin_url)
-    results: list[CheckResult] = []
     template = db.new_name("template")
+    checks = build_checks(cfg)
+    results: dict[str, CheckResult] = {}
+    lock = threading.Lock()
+
+    def record(result: CheckResult) -> None:
+        with lock:
+            results[result.check.id] = result
+            if on_result:
+                on_result(result)
+
     try:
-        db.create(template)
+        try:
+            db.create(template)
+        except psycopg.OperationalError as exc:
+            reason = " ".join(str(exc).split()) or "connection failed"
+            raise RuntimeError(
+                f"cannot connect to PostgreSQL as {_describe(cfg.admin_url)} "
+                f"(RC_ADMIN_URL): {reason}"
+            ) from None
         try:
             _apply(cfg, db, template, cfg.baseline_sql, cfg.baseline_run)
         except (psycopg.Error, RuntimeError) as exc:
-            raise RuntimeError(f"baseline SQL failed: {exc}") from exc
+            raise RuntimeError(f"baseline failed: {exc}") from exc
 
-        for check in build_checks(cfg):
-            if not check.required:
-                result = CheckResult(check, SKIPPED, check.note)
+        runnable = []
+        for check in checks:
+            if check.required:
+                runnable.append(check)
             else:
-                result = _execute(cfg, db, template, check)
-            results.append(result)
-            if on_result:
-                on_result(result)
+                record(CheckResult(check, SKIPPED, check.note))
+        if jobs <= 1:
+            for check in runnable:
+                record(_execute(cfg, db, template, check))
+        else:
+            with ThreadPoolExecutor(max_workers=jobs) as pool:
+                for future in [pool.submit(_execute, cfg, db, template, c) for c in runnable]:
+                    record(future.result())
     finally:
         db.cleanup()
-    return Report(name=cfg.name, results=results)
+    return Report(name=cfg.name, results=[results[c.id] for c in checks if c.id in results])

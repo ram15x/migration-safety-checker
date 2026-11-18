@@ -34,6 +34,15 @@ def to_markdown(report: Report) -> str:
         for kind in (OLD, NEW, FORWARD, ROLLBACK):
             row.append(_ICON[cells[kind].status])
         lines.append("| " + " | ".join(row) + " |")
+    if report.first_failing_state:
+        lines += [
+            "",
+            f"First failing state: `{report.first_failing_state}`. Later states build on it, "
+            "so a failure there can repeat in every state after it.",
+        ]
+    if report.unconfigured:
+        lines += ["", "**Not run, because the config has no command for them:**"]
+        lines += [f"- {r.check.id}: {r.detail}" for r in report.unconfigured]
     lines.append("")
     lines.append("`-` means the check does not apply in that state (for example the old version is already retired).")
 
@@ -55,6 +64,8 @@ def to_json(report: Report) -> str:
         "verdict": report.verdict,
         "required": len(report.required),
         "failed": len(report.failed),
+        "first_failing_state": report.first_failing_state,
+        "not_run_unconfigured": [r.check.id for r in report.unconfigured],
         "checks": [
             {
                 "id": r.check.id,
@@ -63,6 +74,7 @@ def to_json(report: Report) -> str:
                 "required": r.check.required,
                 "status": r.status,
                 "detail": r.detail,
+                "log": r.log,
                 "seconds": round(r.duration, 3),
             }
             for r in report.results

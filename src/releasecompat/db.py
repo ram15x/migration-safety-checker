@@ -6,6 +6,8 @@ old release's schema and data, so checks cannot influence one another.
 
 from __future__ import annotations
 
+import threading
+import time
 import uuid
 from pathlib import Path
 
@@ -22,6 +24,7 @@ class Database:
         self._run_id = uuid.uuid4().hex[:8]
         self._counter = 0
         self._created: list[str] = []
+        self._lock = threading.Lock()
 
     # -- connections -----------------------------------------------------
     def url(self, dbname: str) -> str:
@@ -57,27 +60,39 @@ class Database:
         return f"rc_{self._run_id}_{self._counter}_{safe}".lower()
 
     def create(self, name: str, template: str | None = None) -> None:
-        with self._admin() as conn:
-            if template:
-                conn.execute(
-                    sql.SQL("CREATE DATABASE {} TEMPLATE {}").format(
-                        sql.Identifier(name), sql.Identifier(template)
-                    )
-                )
-            else:
-                conn.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(name)))
-        self._created.append(name)
+        if template:
+            stmt = sql.SQL("CREATE DATABASE {} TEMPLATE {}").format(
+                sql.Identifier(name), sql.Identifier(template)
+            )
+        else:
+            stmt = sql.SQL("CREATE DATABASE {}").format(sql.Identifier(name))
+        for attempt in range(6):
+            try:
+                with self._admin() as conn:
+                    conn.execute(stmt)
+                break
+            except (psycopg.errors.ObjectInUse, psycopg.errors.LockNotAvailable,
+                    psycopg.errors.SerializationFailure):
+                # concurrent clones of one template can briefly collide
+                if attempt == 5:
+                    raise
+                time.sleep(0.2 * (attempt + 1))
+        with self._lock:
+            self._created.append(name)
 
     def drop(self, name: str) -> None:
         with self._admin() as conn:
             conn.execute(
                 sql.SQL("DROP DATABASE IF EXISTS {} WITH (FORCE)").format(sql.Identifier(name))
             )
-        if name in self._created:
-            self._created.remove(name)
+        with self._lock:
+            if name in self._created:
+                self._created.remove(name)
 
     def cleanup(self) -> None:
-        for name in list(self._created):
+        with self._lock:
+            pending = list(self._created)
+        for name in pending:
             try:
                 self.drop(name)
             except psycopg.Error:

@@ -8,7 +8,7 @@
 | `v3.4-to-v3.5.yml` | 0108 move `Ping.body` to `body_raw`, 0109 drop `body` | UNSAFE | 3 of 13 |
 | `v3.9-to-v3.10.yml` | 0116 default, 0117 backfill, 0118 `badge_key` NOT NULL | UNSAFE | 5 of 17 |
 
-Everything runs in about 15 to 60 seconds per config on a laptop-class machine.
+Each config takes roughly 15 to 50 seconds on a 2-core cloud machine; `--jobs 4` took the v3.9 to v3.10 run from 46s to 26s with identical results.
 
 ## Generated configs
 
