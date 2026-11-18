@@ -37,14 +37,25 @@ def squawk_unsafe(root: Path, cfg, exclude: str = "") -> bool | None:
 
 def main() -> int:
     rows = []
+    causes: dict[str, int] = {}
+    inconclusive: list[str] = []
+    isolation: list[str] = []
     for d in sorted((HERE / "scenarios").iterdir()):
         label = json.loads((d / "label.json").read_text())["label"]
         cfg = cfgmod.load(d / "migration-safety-checker.yml")
-        rep = runner.run(cfg)
+        rep = runner.run(cfg, isolate=True)
+        for cause, n in rep.triage.items():
+            causes[cause] = causes.get(cause, 0) + n
+        if rep.verdict == "INCONCLUSIVE":
+            inconclusive.append(d.name)
+        if rep.diagnostic:
+            alone = sorted({r.check.state.name.split(":", 1)[1] for r in rep.diagnostic if r.status == runner.FAIL})
+            skipped = sorted({r.check.state.name.split(":", 1)[1] for r in rep.diagnostic if r.status == runner.SKIPPED and "on its own" in r.detail})
+            isolation.append(f"{d.name}: fail alone: {alone or 'none'}; cannot apply alone: {skipped or 'none'}")
         final = f"after:{cfg.phases[-1].name}"
         by = {(r.check.kind, r.check.state.name): r.status for r in rep.results}
         pred = {
-            "migration-safety-checker": not rep.safe,
+            "migration-safety-checker": rep.verdict == "UNSAFE",
             "ci-new-final": by.get(("new", final)) == runner.FAIL,
             "ci-old-final": by.get(("old", final)) == runner.FAIL,
             "squawk-default": squawk_unsafe(d, cfg),
@@ -55,6 +66,12 @@ def main() -> int:
         rows.append((d.name, label, pred, failed))
         print(f"{d.name:42s} label={label:6s} " + " ".join(f"{k}={'U' if v else 'S'}" for k, v in pred.items()) + (f"  [{failed}]" if failed else ""), flush=True)
 
+    print()
+    print("failures of this tool by cause (all scenarios):", causes or "none")
+    print("inconclusive scenarios (harness failures only):", inconclusive or "none")
+    print("phases applied alone on the baseline (multi-phase scenarios):")
+    for line in isolation:
+        print("  " + line)
     print()
     if not SQUAWK:
         print("squawk not found (set SQUAWK or put it on PATH): its rows are omitted\n")

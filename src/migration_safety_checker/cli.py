@@ -97,6 +97,7 @@ def check(
     out: Path = typer.Option(None, "--out", help="Directory for report files"),
     jobs: int = typer.Option(1, "--jobs", "-j", min=1, max=32, help="Checks to run at once"),
     timeout: int = typer.Option(None, "--timeout", min=1, help="Seconds allowed per command (overrides the config)"),
+    isolate: bool = typer.Option(False, "--isolate", help="Also apply each phase alone on the baseline (diagnostic, never changes the verdict)"),
     strict: bool = typer.Option(False, "--strict", help="Exit 2 if any check was not run for lack of a configured command"),
 ) -> None:
     """Run every required check. Exits 1 if the release is unsafe, 2 on a setup error."""
@@ -108,10 +109,13 @@ def check(
         if result.status == SKIPPED:
             return
         mark = "[green]pass[/green]" if result.status == PASS else "[red]FAIL[/red]"
-        console.print(f"{mark}  {result.check.id}  {result.detail}")
+        if result.check.diagnostic:
+            mark = "[dim]diag[/dim] " + mark
+        cause = f"  [{result.cause}]" if result.cause else ""
+        console.print(f"{mark}  {result.check.id}  {result.detail}{cause}", markup=True, highlight=False)
 
     try:
-        report = run(cfg, on_result=show, jobs=jobs)
+        report = run(cfg, on_result=show, jobs=jobs, isolate=isolate)
     except KeyboardInterrupt:
         console.print("[red]interrupted[/red]; scratch databases were removed")
         raise typer.Exit(code=130)
@@ -126,8 +130,12 @@ def check(
         (out / "junit.xml").write_text(to_junit(report))
         console.print(f"reports written to {out}")
 
-    status = "[green]SAFE[/green]" if report.safe else "[red]UNSAFE[/red]"
+    status = {"SAFE": "[green]SAFE[/green]", "UNSAFE": "[red]UNSAFE[/red]", "INCONCLUSIVE": "[yellow]INCONCLUSIVE[/yellow]"}[report.verdict]
     console.print(f"\nverdict: {status} ({len(report.failed)} of {len(report.required)} required checks failed)")
+    if report.triage:
+        console.print("failures by cause: " + ", ".join(f"{c} {n}" for c, n in report.triage.items()))
+    if report.verdict == "INCONCLUSIVE":
+        console.print("[yellow]every failure was a harness failure (command could not run); nothing shows the migration is unsafe[/yellow]")
     if report.first_failing_state:
         console.print(f"first failing state: {report.first_failing_state}")
     if report.unconfigured:
@@ -135,7 +143,7 @@ def check(
         console.print(f"[yellow]warning:[/yellow] {len(report.unconfigured)} check(s) not run because no command is configured: {ids}")
         if strict:
             raise typer.Exit(code=2)
-    raise typer.Exit(code=0 if report.safe else 1)
+    raise typer.Exit(code={"SAFE": 0, "UNSAFE": 1, "INCONCLUSIVE": 2}[report.verdict])
 
 
 if __name__ == "__main__":

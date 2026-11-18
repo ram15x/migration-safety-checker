@@ -16,6 +16,21 @@ The three hand-written configs above were the first pass. `migration-safety-chec
 
 Run from generated configs, the control is SAFE and v3.9 to v3.10 is UNSAFE with the same failures (5 of 16 required checks; the hand-written config had four extra checks for a half-finished backfill, which the adapter leaves for you to add as `partial_sql`). The generated v3.4 to v3.5 config is UNSAFE with 9 of 21 failed, because it found two more migrations in that release than I had listed by hand, 0110 and 0111. All 9 failures trace to the dropped `body` column from 0109 and repeat in the later states, so 0110 and 0111 add no new cause. The matrix does not say whether they would be safe on their own.
 
+## Failure triage and isolation on these runs
+
+Measured with the failure triage and `--isolate` added later. Causes of the failed checks:
+
+| Run | Failed checks by cause |
+|---|---|
+| v3.4 to v3.5, hand-written | schema 3 |
+| v3.4 to v3.5, generated | schema 9 |
+| v3.9 to v3.10, hand-written | schema 2, migration 1, app-test 3 |
+| v3.9 to v3.10, generated | schema 2, migration 1, app-test 2 |
+
+No run had a harness failure. The `app-test` failures are the read check I wrote for `badge_url` (the `None` finding) and are the ones to read as "may be the test": the failing command printed an assertion, not a database error.
+
+`--isolate` on the generated configs: in v3.9 to v3.10, 0116 and 0117 fail alone only on the forward check (the same `badge_url` read), 0118 fails alone on the old app's tests and write path. In v3.4 to v3.5, 0108 passes alone, but 0109, 0110 and 0111 all fail alone: `migrate api 0110` applies 0109 as a dependency, so isolation cannot tell the three apart. For Django-generated phases it separates only migrations that do not depend on each other.
+
 ## What the runs found
 
 **v3.4 to v3.5.** The move of ping bodies is safe in every state, including a half-moved backfill. Dropping `api_ping.body` in 0109 breaks the v3.4 code: its test suite, its ping endpoint and reads after a v3.5 write fail with `column "body" does not exist`. This is a true positive, and not a surprise: the column is dropped in the same release that stops using it. In a rolling deploy it is the contract step that has to wait for the old version to retire.

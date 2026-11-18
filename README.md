@@ -38,16 +38,33 @@ verdict: UNSAFE (3 of 6 required checks failed)
 first failing state: after:rename
 ```
 
-Exit code is 0 for SAFE, 1 for UNSAFE, 2 for a setup error, so it drops straight into CI.
+Exit code is 0 for SAFE, 1 for UNSAFE, and 2 for a setup error or an INCONCLUSIVE run (every failure was a harness failure), so it drops straight into CI.
 
 | Option | Effect |
 |---|---|
 | `--out DIR` | writes `report.md`, `report.json` (with command logs) and `junit.xml` |
 | `--jobs N` | runs N checks at once, each in its own database |
 | `--timeout S` | seconds allowed per command; a timed-out command is killed with its whole process group |
+| `--isolate` | also applies each phase alone on the baseline and tests it (diagnostic only; never changes the verdict) |
 | `--strict` | exit 2 if a check could not run because the config has no `write` command for it |
 
 Reports name the first failing state, since later states build on it.
+
+### Reading a failure
+
+Every failed check carries a cause, and the report summarises them:
+
+| Cause | Meaning |
+|---|---|
+| `schema` | an app command failed with a database error (missing column, violated constraint) |
+| `migration` | a phase did not apply, including over live rows |
+| `invariant` | one of your SQL invariants returned rows |
+| `app-test` | an app command failed with no database or harness error in its output, for example an assertion; the schema or the test itself may be the cause |
+| `harness` | the command could not run properly: timeout, command not found, import error, no connection |
+
+A run whose failures are all `harness` is INCONCLUSIVE, not UNSAFE: nothing in it shows the migration is unsafe. The cause is assigned by pattern matching on exit codes and error text, so it is a hint, not proof.
+
+With `--isolate`, each phase is also applied alone on the baseline and the four checks run on it, shown beside the rollout results. A failure that appears alone belongs to that phase; one that appears only in the rollout comes from the phases before it. A phase that cannot be applied to the baseline by itself (it uses something an earlier phase created) is reported as such. Isolation works for independent SQL phases. It cannot separate chained Django migrations, because `migrate <app> <name>` applies the migration's dependencies as well.
 
 ## Configuration
 
@@ -118,6 +135,8 @@ Scope: three release pairs of one application, with a chosen subset of its tests
 | Squawk 2.73, timeout/idempotence rules excluded | 12 | 10 | 1 | 3 | 0.55 | 0.92 |
 
 Six unsafe cases are invisible to testing on the final schema: the column split without sync, the rollback with unreadable new values, the half-finished backfill, and the three constraints added over live rows (21 to 23). The first three need the intermediate-state and rollback checks; the last three need the live-data check, and with it switched off (`live: false`) the tool catches 10 of the 13 unsafe scenarios and misses exactly 21 to 23.
+
+Run with isolation, the later phase of each of the five multi-phase scenarios (02, 13, 20, 21, 26) cannot be applied to the baseline on its own, so isolation changes none of these results. None of the failures in this set is a harness failure.
 
 Squawk is a static linter for lock and style hazards. It answers a different question (will this statement block writes) and its findings here reflect that, so the comparison shows the two are complementary, not that one replaces the other.
 

@@ -35,6 +35,7 @@ class Check:
     required: bool
     note: str = ""
     phase: Phase | None = None  # for LIVE checks: the phase applied over live rows
+    diagnostic: bool = False  # runs and is reported, but never counts toward the verdict
 
 
 def build_states(cfg: Config) -> list[State]:
@@ -93,7 +94,58 @@ def _live_check(cfg: Config, index: int) -> Check:
     )
 
 
-def build_checks(cfg: Config) -> list[Check]:
+def _state_checks(cfg: Config, state: State, diagnostic: bool = False) -> list[Check]:
+    """The old, new, forward and rollback checks of one database state."""
+    checks = [
+        Check(
+            id=f"{OLD}@{state.name}", state=state, kind=OLD, required=state.old_required,
+            note="" if state.old_required else "old version is retired in this state",
+            diagnostic=diagnostic,
+        ),
+        Check(
+            id=f"{NEW}@{state.name}", state=state, kind=NEW, required=state.new_required,
+            note="" if state.new_required else "new version is not deployed in this state",
+            diagnostic=diagnostic,
+        ),
+    ]
+    both = state.old_required and state.new_required
+    if not cfg.forward:
+        fnote = "forward checks are disabled"
+    elif not both:
+        fnote = "old and new versions do not overlap in this state"
+    elif cfg.old.write is None:
+        fnote = "apps.old.write is not configured"
+    else:
+        fnote = ""
+    checks.append(
+        Check(
+            id=f"{FORWARD}@{state.name}", state=state, kind=FORWARD,
+            required=cfg.forward and both and cfg.old.write is not None, note=fnote,
+            diagnostic=diagnostic,
+        )
+    )
+    if not cfg.rollback:
+        note = "rollback checks are disabled"
+    elif not both:
+        note = "rollback is not possible in this state"
+    elif cfg.new.write is None:
+        note = "apps.new.write is not configured"
+    else:
+        note = ""
+    checks.append(
+        Check(
+            id=f"{ROLLBACK}@{state.name}", state=state, kind=ROLLBACK,
+            required=cfg.rollback and both and cfg.new.write is not None, note=note,
+            diagnostic=diagnostic,
+        )
+    )
+    return checks
+
+
+def build_checks(cfg: Config, isolate: bool = False) -> list[Check]:
+    """The checks of the rollout, in order. With ``isolate``, each phase is also applied
+    alone on the baseline (diagnostic checks, appended last). A single-phase rollout has
+    nothing to isolate, so it adds none."""
     checks: list[Check] = []
     live_emitted: set[str] = set()
     for state in build_states(cfg):
@@ -101,58 +153,12 @@ def build_checks(cfg: Config) -> list[Check]:
         if phase_name and phase_name not in live_emitted:
             live_emitted.add(phase_name)
             checks.append(_live_check(cfg, [p.name for p in cfg.phases].index(phase_name)))
-        checks.append(
-            Check(
-                id=f"{OLD}@{state.name}",
-                state=state,
-                kind=OLD,
-                required=state.old_required,
-                note="" if state.old_required else "old version is retired in this state",
+        checks.extend(_state_checks(cfg, state))
+    if isolate and len(cfg.phases) > 1:
+        for phase in cfg.phases:
+            alone = State(
+                name=f"alone:{phase.name}", applied=[phase],
+                old_required=phase.old_may_run, new_required=phase.new_may_run,
             )
-        )
-        checks.append(
-            Check(
-                id=f"{NEW}@{state.name}",
-                state=state,
-                kind=NEW,
-                required=state.new_required,
-                note="" if state.new_required else "new version is not deployed in this state",
-            )
-        )
-        both = state.old_required and state.new_required
-        if not cfg.forward:
-            fnote = "forward checks are disabled"
-        elif not both:
-            fnote = "old and new versions do not overlap in this state"
-        elif cfg.old.write is None:
-            fnote = "apps.old.write is not configured"
-        else:
-            fnote = ""
-        checks.append(
-            Check(
-                id=f"{FORWARD}@{state.name}",
-                state=state,
-                kind=FORWARD,
-                required=cfg.forward and both and cfg.old.write is not None,
-                note=fnote,
-            )
-        )
-        can_roll_back = cfg.rollback and both
-        if not cfg.rollback:
-            note = "rollback checks are disabled"
-        elif not (state.old_required and state.new_required):
-            note = "rollback is not possible in this state"
-        elif cfg.new.write is None:
-            note = "apps.new.write is not configured"
-        else:
-            note = ""
-        checks.append(
-            Check(
-                id=f"{ROLLBACK}@{state.name}",
-                state=state,
-                kind=ROLLBACK,
-                required=can_roll_back and cfg.new.write is not None,
-                note=note,
-            )
-        )
+            checks.extend(_state_checks(cfg, alone, diagnostic=True))
     return checks

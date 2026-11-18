@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 import signal
 import subprocess
 import threading
@@ -24,6 +25,41 @@ PASS = "pass"
 FAIL = "fail"
 SKIPPED = "skipped"
 
+# Why a check failed. Only HARNESS failures say nothing about the migration.
+HARNESS = "harness"        # the command could not run properly: timeout, not found, import error, ...
+MIGRATION = "migration"    # a phase did not apply
+SCHEMA = "schema"          # an app command failed with a database error (missing column, constraint, ...)
+APP = "app-test"           # an app command failed without a database or harness signature (an assertion, say)
+INVARIANT = "invariant"    # one of your SQL invariants returned rows
+CAUSES = (SCHEMA, MIGRATION, INVARIANT, APP, HARNESS)
+
+_HARNESS = re.compile(
+    r"ModuleNotFoundError|No module named|ImportError|cannot import name|SyntaxError|IndentationError"
+    r"|command not found|No such file or directory|can't open file|Permission denied|exec format error"
+    r"|ImproperlyConfigured|timed out after|no command configured|exit 12[67]"
+    r"|connection to server .* failed|could not connect to server|Connection refused|the database system is"
+)
+_SCHEMA = re.compile(
+    r"UndefinedColumn|UndefinedTable|UndefinedFunction|NotNullViolation|UniqueViolation|CheckViolation"
+    r"|ForeignKeyViolation|InvalidTextRepresentation|DatatypeMismatch|DataError|IntegrityError|ProgrammingError"
+    r"|OperationalError|SQLSTATE|django\.db\.utils|psycopg2?\.errors|psycopg\.errors"
+    r"|column \"?[\w.]+\"? (of relation \"?\w+\"? )?does not exist|relation \"?[\w.]+\"? does not exist"
+    r"|violates (not-null|unique|check|foreign key)"
+)
+
+
+def classify(code: int, output: str) -> str:
+    """Decide from the exit code and the command's output why an app command failed.
+
+    This is pattern matching on exit codes and error text, not proof: a command whose
+    output matches nothing is reported as an app-test failure.
+    """
+    if code in (124, 126, 127) or _HARNESS.search(output):
+        return HARNESS
+    if _SCHEMA.search(output):
+        return SCHEMA
+    return APP
+
 LOG_LIMIT = 4000
 
 
@@ -34,6 +70,7 @@ class CheckResult:
     detail: str = ""
     log: str = ""
     duration: float = 0.0
+    cause: str = ""  # for failures: one of CAUSES
 
 
 @dataclass
@@ -43,11 +80,27 @@ class Report:
 
     @property
     def failed(self) -> list[CheckResult]:
-        return [r for r in self.results if r.status == FAIL]
+        """Failed checks of the rollout itself (diagnostic isolation runs are not counted)."""
+        return [r for r in self.results if r.status == FAIL and not r.check.diagnostic]
 
     @property
     def required(self) -> list[CheckResult]:
-        return [r for r in self.results if r.check.required]
+        return [r for r in self.results if r.check.required and not r.check.diagnostic]
+
+    @property
+    def diagnostic(self) -> list[CheckResult]:
+        """Phase-in-isolation runs. They explain failures but never change the verdict."""
+        return [r for r in self.results if r.check.diagnostic]
+
+    @property
+    def triage(self) -> dict[str, int]:
+        """Number of failed checks per cause, for the causes that occurred."""
+        counts = {c: sum(1 for r in self.failed if r.cause == c) for c in CAUSES}
+        return {c: n for c, n in counts.items() if n}
+
+    @property
+    def harness_failures(self) -> list[CheckResult]:
+        return [r for r in self.failed if r.cause == HARNESS]
 
     @property
     def unconfigured(self) -> list[CheckResult]:
@@ -61,11 +114,16 @@ class Report:
 
     @property
     def safe(self) -> bool:
-        return not self.failed
+        return self.verdict == "SAFE"
 
     @property
     def verdict(self) -> str:
-        return "SAFE" if self.safe else "UNSAFE"
+        """SAFE, UNSAFE, or INCONCLUSIVE when every failure came from the harness."""
+        if not self.failed:
+            return "SAFE"
+        if any(r.cause != HARNESS for r in self.failed):
+            return "UNSAFE"
+        return "INCONCLUSIVE"
 
 
 def _trim(text: str) -> str:
@@ -151,6 +209,7 @@ def _execute_live(cfg: Config, db: Database, name: str, check: Check, started: f
         return CheckResult(
             check, FAIL, f"migration failed before the application ran: {exc}",
             duration=time.monotonic() - started,
+            cause=HARNESS if _HARNESS.search(str(exc)) else MIGRATION,
         )
     url = db.url(name)
     logs: list[str] = []
@@ -181,6 +240,7 @@ def _execute_live(cfg: Config, db: Database, name: str, check: Check, started: f
             f"phase '{phase.name}' failed on rows written by the {' and '.join(writers)} version: "
             f"{_last_line(exc)}",
             log="\n\n".join(logs + [str(exc)]), duration=time.monotonic() - started,
+            cause=HARNESS if _HARNESS.search(str(exc)) else MIGRATION,
         )
     for inv in cfg.invariants:
         try:
@@ -188,12 +248,12 @@ def _execute_live(cfg: Config, db: Database, name: str, check: Check, started: f
         except psycopg.Error as exc:
             return CheckResult(
                 check, FAIL, f"invariant '{inv.name}' could not run: {str(exc).splitlines()[0]}",
-                log="\n\n".join(logs), duration=time.monotonic() - started,
+                log="\n\n".join(logs), duration=time.monotonic() - started, cause=SCHEMA,
             )
         if rows:
             return CheckResult(
                 check, FAIL, f"invariant '{inv.name}' violated by {len(rows)} row(s) after the phase",
-                log="\n\n".join(logs), duration=time.monotonic() - started,
+                log="\n\n".join(logs), duration=time.monotonic() - started, cause=INVARIANT,
             )
     return CheckResult(check, PASS, log="\n\n".join(logs), duration=time.monotonic() - started)
 
@@ -206,7 +266,7 @@ def _execute(cfg: Config, db: Database, template: str, check: Check) -> CheckRes
     except psycopg.Error as exc:
         return CheckResult(
             check, FAIL, f"could not create a scratch database: {str(exc).splitlines()[0]}",
-            duration=time.monotonic() - started,
+            duration=time.monotonic() - started, cause=HARNESS,
         )
     try:
         if check.kind == LIVE:
@@ -218,9 +278,17 @@ def _execute(cfg: Config, db: Database, template: str, check: Check) -> CheckRes
                 part = check.state.partial
                 _apply(cfg, db, name, part.partial_sql, part.partial_run)
         except (psycopg.Error, RuntimeError) as exc:
+            if check.diagnostic:
+                return CheckResult(
+                    check, SKIPPED,
+                    f"phase cannot be applied to the baseline on its own (it may depend on an earlier phase): "
+                    f"{_last_line(exc)}",
+                    duration=time.monotonic() - started,
+                )
+            cause = HARNESS if _HARNESS.search(str(exc)) else MIGRATION
             return CheckResult(
                 check, FAIL, f"migration failed before the application ran: {exc}",
-                duration=time.monotonic() - started,
+                duration=time.monotonic() - started, cause=cause,
             )
 
         url = db.url(name)
@@ -249,6 +317,7 @@ def _execute(cfg: Config, db: Database, template: str, check: Check) -> CheckRes
                 return CheckResult(
                     check, FAIL, f"{label} exited with code {code}",
                     log="\n\n".join(logs), duration=time.monotonic() - started,
+                    cause=classify(code, out),
                 )
 
         for inv in cfg.invariants:
@@ -258,14 +327,14 @@ def _execute(cfg: Config, db: Database, template: str, check: Check) -> CheckRes
                 return CheckResult(
                     check, FAIL,
                     f"invariant '{inv.name}' could not run: {str(exc).splitlines()[0]}",
-                    log="\n\n".join(logs), duration=time.monotonic() - started,
+                    log="\n\n".join(logs), duration=time.monotonic() - started, cause=SCHEMA,
                 )
             if rows:
                 sample = ", ".join(str(r) for r in rows[:3])
                 return CheckResult(
                     check, FAIL,
                     f"invariant '{inv.name}' violated by {len(rows)} row(s), e.g. {sample}",
-                    log="\n\n".join(logs), duration=time.monotonic() - started,
+                    log="\n\n".join(logs), duration=time.monotonic() - started, cause=INVARIANT,
                 )
 
         return CheckResult(
@@ -289,11 +358,16 @@ def run(
     cfg: Config,
     on_result: Callable[[CheckResult], None] | None = None,
     jobs: int = 1,
+    isolate: bool = False,
 ) -> Report:
-    """Run every check. With ``jobs`` > 1, checks run concurrently, each in its own database."""
+    """Run every check. With ``jobs`` > 1, checks run concurrently, each in its own database.
+
+    With ``isolate``, every phase is also applied alone on the baseline and tested
+    (diagnostic results: reported, never part of the verdict).
+    """
     db = Database(cfg.admin_url)
     template = db.new_name("template")
-    checks = build_checks(cfg)
+    checks = build_checks(cfg, isolate=isolate)
     results: dict[str, CheckResult] = {}
     lock = threading.Lock()
 
