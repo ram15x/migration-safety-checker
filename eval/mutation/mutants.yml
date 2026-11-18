@@ -1,0 +1,156 @@
+# Mutations of the healthchecks schema, labelled BEFORE any tool was run.
+#
+# Setup: the running release is healthchecks v3.9 (git tag v3.9, Django app on PostgreSQL).
+# Each mutant is one phase applied to the real v3.9 schema (all 100+ real migrations
+# applied, then two seeded checks). The labels come from reading the v3.9 source, with the
+# file and line cited in `why`; they say whether a v3.9 instance that keeps serving traffic
+# during or after the phase would break on a normal code path, regardless of which tests
+# exist. The author of the tool wrote both the mutants and the labels. Mutants are modelled
+# on the real migrations in eval/real (0108 move column, 0109 drop column, 0116-0118 default,
+# backfill, NOT NULL) and on the operations named in the request: drop a column the old
+# release uses, add NOT NULL without default, rename a column, tighten a constraint.
+#
+# label: unsafe = a normal v3.9 code path fails (or the phase cannot apply to live data);
+#        safe   = v3.9 keeps working.
+# Source references are to hc/api/models.py and hc/api/views.py at tag v3.9.
+
+mutants:
+  # ---- drop a column the old release uses ---------------------------------------------
+  - id: U01_drop_check_name
+    family: drop-used
+    sql: "ALTER TABLE api_check DROP COLUMN name;"
+    label: unsafe
+    why: "Check.name is a model field (models.py:179) read by Check.to_dict (models.py:394) and name_then_code (models.py:224). Every Check query selects it."
+  - id: U02_drop_check_timeout
+    family: drop-used
+    sql: "ALTER TABLE api_check DROP COLUMN timeout;"
+    label: unsafe
+    why: "Check.timeout (models.py:187) is a model field; every Check SELECT/INSERT names the column, and status computation uses it."
+  - id: U03_drop_check_tags
+    family: drop-used
+    sql: "ALTER TABLE api_check DROP COLUMN tags;"
+    label: unsafe
+    why: "Check.tags (models.py:181) is a model field returned by to_dict (models.py:396); every Check query names the column."
+  - id: U04_drop_ping_ua
+    family: drop-used
+    sql: "ALTER TABLE api_ping DROP COLUMN ua;"
+    label: unsafe
+    why: "Check.ping sets ping.ua and saves the Ping (models.py:509-520), so every ping INSERT names ua."
+  - id: U05_drop_ping_scheme
+    family: drop-used
+    sql: "ALTER TABLE api_ping DROP COLUMN scheme;"
+    label: unsafe
+    why: "Check.ping sets ping.scheme and saves the Ping (models.py:506, 520), so every ping INSERT names scheme."
+  # ---- rename a column ----------------------------------------------------------------
+  - id: U06_rename_check_n_pings
+    family: rename
+    sql: "ALTER TABLE api_check RENAME COLUMN n_pings TO ping_count;"
+    label: unsafe
+    why: "n_pings is a model field (models.py:200) updated with F('n_pings') + 1 on every ping (models.py:493)."
+  - id: U07_rename_check_schedule
+    family: rename
+    sql: "ALTER TABLE api_check RENAME COLUMN schedule TO cron_expr;"
+    label: unsafe
+    why: "schedule is a model field (models.py:189) named in every Check SELECT/INSERT, not only for cron checks."
+  - id: U08_rename_channel_value
+    family: rename
+    sql: "ALTER TABLE api_channel RENAME COLUMN value TO config;"
+    label: unsafe
+    why: "Channel.value is a model field (models.py:852) named in every Channel query and read as self.email.value / self.phone.value (models.py:864-866)."
+  # ---- NOT NULL without default -------------------------------------------------------
+  - id: U09_add_not_null_no_default
+    family: not-null
+    sql: "ALTER TABLE api_check ADD COLUMN region text NOT NULL DEFAULT 'eu'; ALTER TABLE api_check ALTER COLUMN region DROP DEFAULT;"
+    label: unsafe
+    why: "v3.9 does not know a 'region' column, so its Check INSERTs omit it; with no default the insert violates NOT NULL (every check creation, e.g. the create-check API, views.py)."
+  - id: U10_set_not_null_ping_rid
+    family: not-null
+    sql: "ALTER TABLE api_ping ALTER COLUMN rid SET NOT NULL;"
+    label: unsafe
+    why: "Check.ping sets ping.rid = rid (models.py:514) and rid is None unless the request carries ?rid= (views.py:205-211), so ordinary pings insert NULL. Existing NULL rows also block the ALTER."
+  # ---- tighten a constraint -----------------------------------------------------------
+  - id: U11_check_timeout_min_1h
+    family: constraint
+    sql: "ALTER TABLE api_check ADD CONSTRAINT api_check_timeout_min CHECK (timeout >= interval '1 hour');"
+    label: unsafe
+    why: "The v3.9 API accepts timeout from 60 seconds (views.py:77 ge=60) and its own tests create checks with timeout=123s (tests/test_create_check.py:224)."
+  - id: U12_shrink_check_name
+    family: constraint
+    sql: "ALTER TABLE api_check ALTER COLUMN name TYPE varchar(10);"
+    label: unsafe
+    why: "Check.name allows 100 characters (models.py:179); names over 10 characters are normal, so inserts fail and the ALTER cannot apply over longer existing names."
+  - id: U13_unique_check_project_name
+    family: constraint
+    sql: "CREATE UNIQUE INDEX api_check_project_name_uq ON api_check (project_id, name);"
+    label: unsafe
+    why: "v3.9 declares no uniqueness on Check names (no unique constraint on name in models.py) and the API creates checks with a repeated or empty name, so duplicates are normal data."
+
+  # ---- changes that leave v3.9 working ------------------------------------------------
+  - id: S01_add_nullable_column
+    family: add-safe
+    sql: "ALTER TABLE api_check ADD COLUMN region text;"
+    label: safe
+    why: "A nullable column nobody names: v3.9 INSERTs omit it and SELECTs list their own columns."
+  - id: S02_add_not_null_with_default
+    family: add-safe
+    sql: "ALTER TABLE api_check ADD COLUMN priority integer NOT NULL DEFAULT 0;"
+    label: safe
+    why: "v3.9 inserts omit the column and the database default supplies the value."
+  - id: S03_widen_check_name
+    family: widen
+    sql: "ALTER TABLE api_check ALTER COLUMN name TYPE varchar(200);"
+    label: safe
+    why: "Widening varchar(100) to varchar(200) accepts every value v3.9 writes (models.py:179 limits names to 100)."
+  - id: S04_add_index
+    family: index
+    sql: "CREATE INDEX api_check_last_ping_idx2 ON api_check (last_ping);"
+    label: safe
+    why: "An extra index changes no column or constraint that v3.9 code depends on."
+  - id: S05_check_n_pings_nonneg
+    family: constraint-safe
+    sql: "ALTER TABLE api_check ADD CONSTRAINT api_check_n_pings_nonneg CHECK (n_pings >= 0);"
+    label: safe
+    why: "n_pings starts at 0 (models.py:200) and only increases (models.py:493)."
+  - id: S06_add_table
+    family: add-safe
+    sql: "CREATE TABLE api_extra (id serial PRIMARY KEY, note text);"
+    label: safe
+    why: "A new table no v3.9 code references."
+  - id: S07_expand_only_rename
+    family: add-safe
+    sql: "ALTER TABLE api_check ADD COLUMN ping_count integer NOT NULL DEFAULT 0;"
+    label: safe
+    why: "The expand half of a rename: the old column stays, the new one has a default; nothing v3.9 uses changes."
+  - id: S08_add_nullable_ping_column
+    family: add-safe
+    sql: "ALTER TABLE api_ping ADD COLUMN object_ref bigint;"
+    label: safe
+    why: "A nullable column nobody names."
+  - id: S09_unique_code_project
+    family: constraint-safe
+    sql: "CREATE UNIQUE INDEX api_check_code_project_uq ON api_check (code, project_id);"
+    label: safe
+    why: "code is already unique on its own (models.py:182), so the pair is unique for any data."
+  - id: S10_generated_column
+    family: add-safe
+    sql: "ALTER TABLE api_channel ADD COLUMN value_len integer GENERATED ALWAYS AS (length(value)) STORED;"
+    label: safe
+    why: "A generated column is computed by the database; v3.9 never writes it and its queries list their own columns."
+  - id: S11_widen_notification_error
+    family: widen
+    sql: "ALTER TABLE api_notification ALTER COLUMN error TYPE varchar(400);"
+    label: safe
+    why: "Widening a varchar(200) accepts every value v3.9 writes."
+  - id: S12_partial_index
+    family: index
+    sql: "CREATE INDEX api_flip_unprocessed_idx ON api_flip (processed) WHERE processed IS NULL;"
+    label: safe
+    why: "An extra partial index changes no constraint that v3.9 depends on."
+  - id: S13_sync_trigger_expand
+    family: add-safe
+    sql: |
+      ALTER TABLE api_check ADD COLUMN title text;
+      CREATE FUNCTION api_check_title_sync() RETURNS trigger AS $$ BEGIN NEW.title := NEW.name; RETURN NEW; END; $$ LANGUAGE plpgsql;
+      CREATE TRIGGER api_check_title_sync BEFORE INSERT OR UPDATE ON api_check FOR EACH ROW EXECUTE FUNCTION api_check_title_sync();
+    label: safe
+    why: "Expand with a trigger that keeps the new column in step with name; v3.9 never names the new column."
