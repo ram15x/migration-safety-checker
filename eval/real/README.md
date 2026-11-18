@@ -10,6 +10,12 @@
 
 Everything runs in about 15 to 60 seconds per config on a laptop-class machine.
 
+## Generated configs
+
+The three hand-written configs above were the first pass. `releasecompat init-django` now builds the same thing from two checkouts: it asks each release's own Django for its migration graph, turns every migration only the new release has into a phase, and writes a settings overlay so the suites run against the prepared database. `generate.sh` runs it for all three pairs.
+
+Run from generated configs, the control is SAFE and v3.9 to v3.10 is UNSAFE with the same failures (4 of 13 required checks; the hand-written config had two extra checks for a half-finished backfill, which the adapter leaves for you to add as `partial_sql`). The generated v3.4 to v3.5 config is UNSAFE with 9 of 17 failed, because it found two more migrations in that release than I had listed by hand, 0110 and 0111. All 9 failures trace to the dropped `body` column from 0109 and repeat in the later states, so 0110 and 0111 add no new cause. The matrix does not say whether they would be safe on their own.
+
 ## What the runs found
 
 **v3.4 to v3.5.** The move of ping bodies is safe in every state, including a half-moved backfill. Dropping `api_ping.body` in 0109 breaks the v3.4 code: its test suite, its ping endpoint and reads after a v3.5 write fail with `column "body" does not exist`. This is a true positive, and not a surprise: the column is dropped in the same release that stops using it. In a rolling deploy it is the contract step that has to wait for the old version to retire.
